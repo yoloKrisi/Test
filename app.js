@@ -17,6 +17,7 @@ const elements = {
   emptyPlan: document.querySelector("#empty-plan"),
   dayExerciseSelect: document.querySelector("#day-exercise-select"),
   deleteTrainingDayButton: document.querySelector("#delete-training-day-button"),
+  finishTrainingButton: document.querySelector("#finish-training-button"),
   dayDialog: document.querySelector("#day-dialog"),
   dayForm: document.querySelector("#day-form"),
   dayName: document.querySelector("#day-name"),
@@ -44,7 +45,6 @@ document.body.classList.add("dark-mode");
 function trainingMarker(dayId) {
   return `training:${dayId}`;
 }
-
 function isTrainingMarker(name) {
   return typeof name === "string" && name.startsWith("training:");
 }
@@ -320,6 +320,8 @@ function renderPlans() {
   const day = activeDay();
   elements.deleteTrainingDayButton.disabled = !day;
   elements.deleteTrainingDayButton.dataset.id = day?.id || "";
+  elements.finishTrainingButton.disabled = !day;
+  elements.finishTrainingButton.dataset.id = day?.id || "";
   elements.trainingDays.innerHTML = day ? day.exerciseIds.map((exerciseId) => renderDayExercise(exerciseId)).join("") : "";
   elements.emptyPlan.hidden = Boolean(day);
   renderExercises();
@@ -699,6 +701,9 @@ document.addEventListener("click", (event) => {
       startExerciseTimer(exercise.id);
     }
   }
+  if (action === "finish-training") {
+    finishTraining(id);
+  }
   if (action === "edit") {
     const exercise = state.exercises.find((item) => item.id === id);
     if (exercise) openExerciseDialog(exercise);
@@ -792,6 +797,50 @@ function deleteTrainingDay(dayId) {
   saveState();
   render();
   showMessage("Trainingstag gelöscht.");
+}
+
+function finishTraining(dayId) {
+  const day = activePlan()?.days.find((item) => item.id === dayId);
+  if (!day) return;
+  const rows = day.exerciseIds.flatMap((exerciseId) => {
+    const exercise = state.exercises.find((item) => item.id === exerciseId);
+    return (exercise?.rows || []).map((row) => ({ exerciseId, row }));
+  });
+  const enteredRows = rows.filter(({ row }) => row.weight !== "" || row.repetitions !== "");
+  const invalid = enteredRows.find(({ row }) => {
+    const weight = Number(row.weight);
+    const repetitions = Number(row.repetitions);
+    return !Number.isFinite(weight) || weight < 0 || weight > 1000
+      || !Number.isInteger(repetitions) || repetitions < 1 || repetitions > 1000;
+  });
+  if (invalid) {
+    showMessage("Bitte alle eingegebenen Gewichte und Wiederholungen gültig ausfüllen.");
+    return;
+  }
+  if (!enteredRows.length) {
+    showMessage("Trage zuerst mindestens einen vollständigen Satz ein.");
+    return;
+  }
+  const date = today();
+  const current = (state.calendar[date] || []).filter((marker) => marker !== "restday");
+  if (!current.includes(trainingMarker(day.id)) && current.length >= 3) {
+    showMessage("Für diesen Tag sind bereits drei Kalenderaktivitäten gespeichert.");
+    return;
+  }
+  enteredRows.forEach(({ exerciseId, row }) => {
+    const existing = state.sets.find((entry) => entry.rowId === row.id);
+    const entry = existing || { id: createId(), rowId: row.id, exerciseId, createdAt: Date.now() };
+    Object.assign(entry, { exerciseId, weight: Number(row.weight), repetitions: Number(row.repetitions), date });
+    if (!existing) state.sets.push(entry);
+  });
+  if (!current.includes(trainingMarker(day.id))) {
+    current.push(trainingMarker(day.id));
+  }
+  state.calendar[date] = current;
+  day.exerciseIds.forEach((exerciseId) => stopExerciseTimer(exerciseId));
+  saveState();
+  render();
+  showMessage(`${day.name} beendet – ${enteredRows.length} Sätze gewertet.`);
 }
 
 document.addEventListener("dblclick", (event) => {

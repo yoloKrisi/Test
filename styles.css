@@ -173,6 +173,8 @@ input:user-invalid { border-color: #dba0a0; }
 .button-quiet { color: var(--muted); background: #eef3ef; }
 .button-danger { color: #f4c1c1; background: #542626; }
 .button-danger:hover { color: #fff; background: #7a3030; }
+.button-finish { color: #102b1d; background: #8fd3ad; }
+.button-finish:hover { background: #b4e5c8; }
 .exercise-list { display: grid; gap: 8px; }
 .exercise-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 13px; background: #f7faf7; border-radius: 11px; }
 .exercise-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9rem; font-weight: 700; }
