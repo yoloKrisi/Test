@@ -514,6 +514,7 @@ elements.symbolPicker.addEventListener("click", (event) => {
   if (!state.calendar[selectedDate].length || (state.calendar[selectedDate].length === 1 && state.calendar[selectedDate][0] === "restday")) delete state.calendar[selectedDate];
   saveState();
   renderCalendar();
+  renderHistory();
   renderSymbolPicker();
 });
 elements.dateForm.addEventListener("submit", (event) => { event.preventDefault(); elements.dateDialog.close(); });
