@@ -189,7 +189,7 @@ body.dark-mode .modal,
 body.dark-mode .symbol-choice { background: var(--card); }
 body.dark-mode .exercise-panel { background: #0d1117; }
 body.dark-mode .calendar-day { color: var(--ink); background: var(--card); border-color: var(--line); }
-body.dark-mode .calendar-day.restday { color: #c0c7c3; background: #333b38; border-color: #737e79; }
+body.dark-mode .calendar-day.restday { color: #183044; background: #E1EFF6; border-color: #97D2FB; }
 body.dark-mode .calendar-day.krankheit { color: #ffd7d7; background: #4b2529; border-color: #c65f6c; }
 body.dark-mode .calendar-day.laufen { background: #1d3658; border-color: #5796e8; }
 body.dark-mode .calendar-day.sauna::after { background: #f2a05f; }
