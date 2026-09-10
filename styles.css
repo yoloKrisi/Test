@@ -206,7 +206,7 @@ body.dark-mode .calendar-day.training-day.sauna { border-color: transparent; }
 body.dark-mode .training-day-picker { color: #f1f6f2; border-color: #006400; background: #213C2E; }
 body.dark-mode .symbol-legend { color: #aeb6b2; }
 body.dark-mode .symbol-legend .training-day-legend { color: #aeb6b2; }
-body.dark-mode .exercise-notes { color: var(--ink); border-color: #aeb6b2; background: #252a29; }
+body.dark-mode .exercise-notes { color: var(--ink); border-color: #aeb6b2; background: #1F1F1F; }
 body.dark-mode .exercise-row,
 body.dark-mode .history-row,
 body.dark-mode .exercise-history > div { background: #1f1f1f; }
