@@ -57,7 +57,7 @@ function markerLabel(name) {
 
 function symbolMarkup(name, size = "small") {
   const special = {
-    laufen: '<path d="M10 35 H55 M40 20 L55 35 L40 50" fill="none" stroke="#111" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>',
+    laufen: '<path d="M10 31 H47 L37 21 L41 17 L59 35 L41 53 L37 49 L47 39 H10 Z" fill="#111"/>',
     sauna: '<circle cx="35" cy="35" r="17" fill="#f59e0b" stroke="#c2410c" stroke-width="3"/>',
     restday: '<text x="35" y="48" text-anchor="middle" font-size="42" font-family="Arial" font-weight="700" fill="#17365d">Z</text>',
     krankheit: '<path d="M35 18 L35 52 M18 35 L52 35" stroke="#d9363e" stroke-width="8" stroke-linecap="round"/>',
@@ -473,6 +473,7 @@ elements.symbolPicker.addEventListener("click", (event) => {
   const current = state.calendar[selectedDate] || ["restday"];
   const symbol = button.dataset.symbol;
   if (current.includes(symbol)) state.calendar[selectedDate] = current.filter((item) => item !== symbol);
+  else if (symbol === "restday" && current.includes("sauna")) state.calendar[selectedDate] = ["sauna", "restday"];
   else if (symbol === "restday") state.calendar[selectedDate] = ["restday"];
   else if (current.length === 1 && current[0] === "restday") state.calendar[selectedDate] = [symbol];
   else if (current.length < 2) state.calendar[selectedDate] = [...current, symbol];
