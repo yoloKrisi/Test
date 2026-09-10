@@ -587,8 +587,24 @@ document.addEventListener("dblclick", (event) => {
   if (!tab) return;
   const day = activePlan()?.days.find((item) => item.id === tab.dataset.id);
   if (!day) return;
-  const name = window.prompt("Name des Trainingstags:", day.name)?.trim().replace(/\s+/g, " ");
-  if (!name || name === day.name) return;
+  const enteredName = window.prompt("Trainingstag bearbeiten. Für Löschen den Namen leeren:", day.name);
+  if (enteredName === null) return;
+  const name = enteredName.trim().replace(/\s+/g, " ");
+  if (!name) {
+    if (!window.confirm(`"${day.name}" wirklich löschen?`)) return;
+    activePlan().days = activePlan().days.filter((item) => item.id !== day.id);
+    const markedDates = Object.keys(state.calendar).filter((date) => state.calendar[date].includes(trainingMarker(day.id)));
+    markedDates.forEach((date) => {
+      state.calendar[date] = state.calendar[date].filter((marker) => marker !== trainingMarker(day.id));
+      if (!state.calendar[date].length) delete state.calendar[date];
+    });
+    activeDayId = null;
+    saveState();
+    render();
+    showMessage("Trainingstag gelöscht.");
+    return;
+  }
+  if (name === day.name) return;
   if (activePlan().days.some((item) => item.id !== day.id && item.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
     showMessage("Diesen Trainingstag gibt es bereits.");
     return;

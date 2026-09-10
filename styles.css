@@ -41,7 +41,7 @@ body.dark-mode .calendar-heading { color: #aeb6b2; }
 .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
 .calendar-grid > span { min-height: 32px; }
 .calendar-weekday { color: var(--muted); font-size: .68rem; font-weight: 800; text-align: center; }
-.calendar-day { position: relative; aspect-ratio: 1; min-width: 0; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: .78rem; }
+.calendar-day { position: relative; aspect-ratio: 1; min-width: 0; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: .72rem; }
 .calendar-day:hover { background: var(--mint); }
 .calendar-day.restday { color: #6b7280; border-color: #9ca3af; background: #e5e7eb; }
 .calendar-day.laufen { border-color: #3b82f6; background: #dbeafe; }
@@ -52,7 +52,7 @@ body.dark-mode .calendar-heading { color: #aeb6b2; }
 .calendar-day.training-day { color: #111; border-color: #116b45; background: #8fd3ad; }
 .calendar-day.training-day.laufen { color: #111; border-color: #116b45; background: #8fd3ad; }
 .calendar-day.training-day:hover { background: #c7e9d0; }
-.training-day-label { display: block; max-width: 100%; overflow: hidden; color: #aeb6b2; font-size: .58rem; font-weight: 800; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
+.training-day-label { display: block; max-width: 100%; overflow: hidden; color: #aeb6b2; font-size: .72rem; font-weight: 800; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
 body.dark-mode .training-day-label { color: #aeb6b2; }
 .training-day-picker { display: block; width: 100%; padding: 14px 5px; color: #111; border: 2px solid #116b45; border-radius: 7px; background: #8fd3ad; font-size: .78rem; text-align: center; }
 .training-day-legend { color: #111; font-size: .68rem; font-weight: 800; }
