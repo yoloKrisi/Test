@@ -52,7 +52,7 @@ body.dark-mode .calendar-heading { color: #aeb6b2; }
 .calendar-day.training-day { color: #111; border-color: #116b45; background: #8fd3ad; }
 .calendar-day.training-day.laufen { color: #111; border-color: #116b45; background: #8fd3ad; }
 .calendar-day.training-day:hover { background: #c7e9d0; }
-.training-day-label { display: block; max-width: 100%; overflow: hidden; color: #111; font-size: .58rem; font-weight: 800; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
+.training-day-label { display: block; max-width: 100%; overflow: hidden; color: #aeb6b2; font-size: .58rem; font-weight: 800; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
 .training-day-picker { display: block; width: 100%; padding: 14px 5px; color: #111; border: 2px solid #116b45; border-radius: 7px; background: #8fd3ad; font-size: .78rem; text-align: center; }
 .training-day-legend { color: #111; font-size: .68rem; font-weight: 800; }
 .calendar-symbols { display: flex; justify-content: center; gap: 2px; min-height: 18px; }
@@ -188,18 +188,18 @@ body.dark-mode select,
 body.dark-mode .modal,
 body.dark-mode .symbol-choice { background: var(--card); }
 body.dark-mode .exercise-panel { background: #1f1f1f; }
-body.dark-mode .calendar-day { color: var(--ink); background: #2D2D2D; border-color: var(--line); }
+body.dark-mode .calendar-day { color: #aeb6b2; background: #2D2D2D; border-color: transparent; }
 body.dark-mode .card,
 body.dark-mode .day-exercise-card,
 body.dark-mode .calendar-card { border-color: transparent; }
 body.dark-mode .calendar-day:not(.restday):not(.training-day):not(.laufen):not(.krankheit) { border-color: transparent; }
-body.dark-mode .calendar-day.restday { color: #e5ece8; background: #363636; border-color: transparent; }
-body.dark-mode .calendar-day.krankheit { color: #ffd7d7; background: #2D2D2D; border-color: #c65f6c; }
-body.dark-mode .calendar-day.laufen { background: #2D2D2D; border-color: #5796e8; }
+body.dark-mode .calendar-day.restday { color: #aeb6b2; background: #363636; border-color: transparent; }
+body.dark-mode .calendar-day.krankheit { color: #aeb6b2; background: #2D2D2D; border-color: transparent; }
+body.dark-mode .calendar-day.laufen { background: #2D2D2D; border-color: transparent; }
 body.dark-mode .calendar-day.sauna::after { background: #f2a05f; }
 body.dark-mode .calendar-day.training-day,
-body.dark-mode .calendar-day.training-day.laufen { color: #f1f6f2; background: #2D2D2D; border-color: #006400; }
-body.dark-mode .calendar-day.training-day.sauna { border-color: #006400; }
+body.dark-mode .calendar-day.training-day.laufen { color: #aeb6b2; background: #2D2D2D; border-color: transparent; }
+body.dark-mode .calendar-day.training-day.sauna { border-color: transparent; }
 body.dark-mode .training-day-picker { color: #f1f6f2; border-color: #006400; background: #213C2E; }
 body.dark-mode .symbol-legend { color: #aeb6b2; }
 body.dark-mode .symbol-legend .training-day-legend { color: #aeb6b2; }

@@ -59,7 +59,7 @@ function markerLabel(name) {
 
 function symbolMarkup(name, size = "small") {
   const special = {
-    laufen: '<path d="M10 31 H47 L37 21 L41 17 L59 35 L41 53 L37 49 L47 39 H10 Z" fill="#111"/>',
+    laufen: '<text x="35" y="42" text-anchor="middle" font-size="14" font-family="Arial, sans-serif" font-weight="700" fill="#aeb6b2">Laufen</text>',
     sauna: '<circle cx="35" cy="35" r="17" fill="#f59e0b" stroke="#c2410c" stroke-width="3"/>',
     restday: '<text x="35" y="48" text-anchor="middle" font-size="42" font-family="Arial" font-weight="700" fill="#17365d">Z</text>',
     krankheit: '<path d="M35 18 L35 52 M18 35 L52 35" stroke="#d9363e" stroke-width="8" stroke-linecap="round"/>',
