@@ -825,6 +825,10 @@ function finishTraining(dayId) {
   });
   if (!current.includes(trainingMarker(day.id))) current.push(trainingMarker(day.id));
   state.calendar[date] = current;
+  enteredRows.forEach(({ row }) => {
+    row.weight = "";
+    row.repetitions = "";
+  });
   day.exerciseIds.forEach((exerciseId) => stopExerciseTimer(exerciseId));
   saveState();
   render();
