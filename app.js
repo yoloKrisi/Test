@@ -622,6 +622,16 @@ document.addEventListener("dblclick", (event) => {
   editTrainingDay(dayId);
 });
 
+elements.trainingDayTabs.addEventListener("dblclick", (event) => {
+  const tab = event.target.closest(".training-day-tab[data-id]");
+  if (tab) editTrainingDay(tab.dataset.id);
+});
+
+elements.calendarGrid.addEventListener("dblclick", (event) => {
+  const label = event.target.closest("[data-training-day-id]");
+  if (label) editTrainingDay(label.dataset.trainingDayId);
+});
+
 
 document.addEventListener("submit", (event) => {
   const form = event.target.closest(".inline-set-form");
