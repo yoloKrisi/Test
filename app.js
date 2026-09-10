@@ -36,6 +36,15 @@ const expandedExercises = new Set();
 const SYMBOLS = ["sauna", "laufen", "restday", "krankheit", "brust-rücken", "schultern-arme", "beine", "beine-bauch", "bauch", "arme", "brust", "rücken", "schultern", "push", "pull", "full body", "upper", "lower"];
 
 function symbolMarkup(name, size = "small") {
+  const special = {
+    laufen: '<path d="M20 48 L33 40 L43 47 L36 51 L27 48 L20 57 L11 64" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 37 L24 29 L29 23 L37 28 L45 28" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="31" cy="17" r="6" fill="#fff" stroke="#111" stroke-width="2"/>',
+    sauna: '<path d="M19 57 Q19 47 27 42 Q35 37 43 42 Q51 47 51 57Z" fill="#ff9f43" stroke="#111" stroke-width="2"/><path d="M27 37 C20 30 31 28 25 20 M38 37 C31 30 42 28 36 20 M47 37 C40 30 51 28 45 20" fill="none" stroke="#f27525" stroke-width="3" stroke-linecap="round"/>',
+    restday: '<path d="M15 18 L50 18 L50 50 L15 50Z" fill="#e5e7eb" stroke="#555" stroke-width="2" rx="5"/><text x="32" y="42" text-anchor="middle" font-size="28" font-family="Arial" font-weight="700" fill="#6b7280">Z</text>',
+    krankheit: '<circle cx="35" cy="35" r="20" fill="#fff" stroke="#111" stroke-width="2"/><path d="M35 23 L35 47 M23 35 L47 35" stroke="#d9363e" stroke-width="7" stroke-linecap="round"/>',
+  };
+  if (special[name]) {
+    return `<svg class="person-symbol ${size} special-symbol" viewBox="0 0 70 70" aria-hidden="true">${special[name]}</svg>`;
+  }
   const highlighted = {
     "brust-rücken": "chest back", "schultern-arme": "shoulders arms", beine: "legs",
     "beine-bauch": "legs abs", bauch: "abs", arme: "arms", brust: "chest",
@@ -48,8 +57,8 @@ function symbolMarkup(name, size = "small") {
   return `<svg class="person-symbol ${size}" viewBox="${view}" aria-hidden="true">
     <g transform="translate(${size === "large" ? 0 : 8} ${size === "large" ? 0 : 5}) scale(${scale})">
       <circle cx="35" cy="10" r="7" fill="#fff" stroke="#111" stroke-width="2"/>
-      <path d="M27 20 Q35 16 43 20 L47 48 Q35 54 23 48Z" fill="#fff" stroke="#111" stroke-width="2"/>
-      <path d="M27 21 L17 44 M43 21 L53 44 M30 49 L27 76 M40 49 L43 76" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+      <path d="M26 20 Q35 14 44 20 L50 46 Q46 54 35 53 Q24 54 20 46Z" fill="#fff" stroke="#111" stroke-width="2"/>
+      <path d="M26 21 L14 43 M44 21 L56 43 M30 50 L25 77 M40 50 L45 77" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/>
       ${highlighted.includes("chest") ? '<path d="M26 25 Q35 21 44 25 L43 34 Q35 37 27 34Z" fill="#111"/>' : ""}
       ${highlighted.includes("back") ? '<path d="M27 25 Q35 21 43 25 L42 39 Q35 42 28 39Z" fill="#111"/>' : ""}
       ${highlighted.includes("shoulders") ? '<path d="M24 22 Q27 18 30 22 L29 29 Q25 31 23 27Z M40 22 Q43 18 46 22 L47 27 Q45 31 41 29Z" fill="#111"/>' : ""}
