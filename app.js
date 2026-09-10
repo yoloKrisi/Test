@@ -232,20 +232,31 @@ function renderTrainingDayStats() {
     const sets = state.sets.filter((entry) => dates.includes(entry.date) && exerciseIds.has(entry.exerciseId));
     return { day, count: sets.length, dates };
   });
-  const totalSets = stats.reduce((sum, item) => sum + item.count, 0);
-  elements.trainingDayStats.innerHTML = stats.length ? stats.map(({ day, count, dates }) => {
-    const percentage = totalSets ? Math.round((count / totalSets) * 100) : 0;
-    const firstDate = dates[0] ? new Date(`${dates[0]}T12:00:00`) : null;
-    const lastDate = dates.length ? new Date(`${dates[dates.length - 1]}T12:00:00`) : null;
+  stats.forEach((item, index) => {
+    const firstDate = item.dates[0] ? new Date(`${item.dates[0]}T12:00:00`) : null;
+    const lastDate = item.dates.length ? new Date(`${item.dates[item.dates.length - 1]}T12:00:00`) : null;
     const weeks = firstDate && lastDate
       ? Math.max(1, (Math.floor((lastDate - firstDate) / 86400000) + 1) / 7)
       : 1;
-    const perWeek = count / weeks;
-    return `<div class="training-day-stat">
-      <div class="training-day-ring" style="--ring-value: ${percentage * 3.6}deg"><strong>${percentage}%</strong></div>
-      <div><strong class="training-day-stat-name">${escapeHtml(day.name)}</strong><span>${perWeek.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Sätze / Woche</span><span>${count} Sätze insgesamt</span></div>
-    </div>`;
-  }).join("") : "";
+    item.perWeek = item.count / weeks;
+    item.color = ["#facc15", "#60a5fa", "#a78bfa", "#34d399", "#fb7185", "#f97316"][index % 6];
+  });
+  const totalPerWeek = stats.reduce((sum, item) => sum + item.perWeek, 0);
+  let degree = 0;
+  const segments = stats.map((item) => {
+    const start = degree;
+    degree += totalPerWeek ? (item.perWeek / totalPerWeek) * 360 : 0;
+    return `${item.color} ${start}deg ${degree}deg`;
+  });
+  elements.trainingDayStats.innerHTML = stats.length ? `
+    <div class="training-day-ring" style="--ring-gradient: conic-gradient(${segments.join(", ")});">
+      <strong>${totalPerWeek.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</strong>
+      <span>Sätze/Woche</span>
+    </div>
+    <div class="training-day-stat-list">${stats.map(({ day, count, perWeek, color }) => {
+      const percentage = totalPerWeek ? Math.round((perWeek / totalPerWeek) * 100) : 0;
+      return `<div class="training-day-stat"><span class="training-day-stat-color" style="--stat-color:${color}"></span><div><strong class="training-day-stat-name">${escapeHtml(day.name)}</strong><span>${perWeek.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Sätze/Woche · ${percentage}%</span><span>${count} Sätze insgesamt</span></div></div>`;
+    }).join("")}</div>` : "";
 }
 
 function renderCalendar() {
