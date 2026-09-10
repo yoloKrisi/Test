@@ -150,6 +150,8 @@ input:user-invalid { border-color: #dba0a0; }
 .button-full { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 6px; padding: 14px 16px; }
 .button-small { padding: 9px 11px; color: var(--green); background: var(--mint); font-size: .76rem; }
 .button-quiet { color: var(--muted); background: #eef3ef; }
+.button-danger { color: #f4c1c1; background: #542626; }
+.button-danger:hover { color: #fff; background: #7a3030; }
 .exercise-list { display: grid; gap: 8px; }
 .exercise-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 13px; background: #f7faf7; border-radius: 11px; }
 .exercise-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9rem; font-weight: 700; }

@@ -15,6 +15,7 @@ const elements = {
   trainingDayTabs: document.querySelector("#training-day-tabs"),
   emptyPlan: document.querySelector("#empty-plan"),
   dayExerciseSelect: document.querySelector("#day-exercise-select"),
+  deleteTrainingDayButton: document.querySelector("#delete-training-day-button"),
   dayDialog: document.querySelector("#day-dialog"),
   dayForm: document.querySelector("#day-form"),
   dayName: document.querySelector("#day-name"),
@@ -214,6 +215,8 @@ function renderPlans() {
     </button>
   `).join("") + '<button class="training-day-tab add-tab" type="button" data-action="add-day" aria-label="Neuen Trainingstag hinzufügen">+</button>';
   const day = activeDay();
+  elements.deleteTrainingDayButton.disabled = !day;
+  elements.deleteTrainingDayButton.dataset.id = day?.id || "";
   elements.trainingDays.innerHTML = day ? day.exerciseIds.map((exerciseId) => renderDayExercise(exerciseId)).join("") : "";
   elements.emptyPlan.hidden = Boolean(day);
   renderExercises();
@@ -573,11 +576,9 @@ document.addEventListener("click", (event) => {
   }
   if (action === "delete-day") {
     const plan = activePlan();
-    if (!plan || !window.confirm("Diesen Trainingstag wirklich löschen?")) return;
-    plan.days = plan.days.filter((day) => day.id !== id);
-    saveState();
-    render();
-    showMessage("Trainingstag gelöscht.");
+    const day = plan?.days.find((item) => item.id === id);
+    if (!day || !window.confirm(`"${day.name}" wirklich löschen?`)) return;
+    deleteTrainingDay(day.id);
   }
   if (action === "remove-day-exercise") {
     const plan = activePlan();
@@ -624,16 +625,7 @@ function editTrainingDay(dayId) {
   const name = enteredName.trim().replace(/\s+/g, " ");
   if (!name) {
     if (!window.confirm(`"${day.name}" wirklich löschen?`)) return;
-    activePlan().days = activePlan().days.filter((item) => item.id !== day.id);
-    const markedDates = Object.keys(state.calendar).filter((date) => state.calendar[date].includes(trainingMarker(day.id)));
-    markedDates.forEach((date) => {
-      state.calendar[date] = state.calendar[date].filter((marker) => marker !== trainingMarker(day.id));
-      if (!state.calendar[date].length) delete state.calendar[date];
-    });
-    activeDayId = null;
-    saveState();
-    render();
-    showMessage("Trainingstag gelöscht.");
+    deleteTrainingDay(day.id);
     return;
   }
   if (name === day.name) return;
@@ -645,6 +637,20 @@ function editTrainingDay(dayId) {
   saveState();
   render();
   showMessage("Trainingstag umbenannt.");
+}
+
+function deleteTrainingDay(dayId) {
+  const plan = activePlan();
+  if (!plan) return;
+  plan.days = plan.days.filter((item) => item.id !== dayId);
+  Object.keys(state.calendar).forEach((date) => {
+    state.calendar[date] = state.calendar[date].filter((marker) => marker !== trainingMarker(dayId));
+    if (!state.calendar[date].length) delete state.calendar[date];
+  });
+  activeDayId = null;
+  saveState();
+  render();
+  showMessage("Trainingstag gelöscht.");
 }
 
 document.addEventListener("dblclick", (event) => {
