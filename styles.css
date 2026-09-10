@@ -59,6 +59,8 @@ body.dark-mode .training-day-label { color: #aeb6b2; }
 .calendar-symbols { display: flex; justify-content: center; gap: 2px; min-height: 18px; }
 .person-symbol { display: block; width: 18px; height: 28px; }
 .person-symbol.large { width: 34px; height: 58px; }
+.running-symbol { width: 42px; height: 28px; }
+.running-symbol.large { width: 90px; height: 58px; }
 .symbol-legend .person-symbol { width: 15px; height: 24px; }
 .symbol-legend { display: flex; flex-direction: column; gap: 9px; color: var(--muted); font-size: .7rem; }
 .symbol-legend span { display: inline-flex; align-items: center; gap: 4px; }
