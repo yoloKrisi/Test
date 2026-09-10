@@ -189,6 +189,8 @@ body.dark-mode select,
 body.dark-mode .modal,
 body.dark-mode .symbol-choice { background: var(--card); }
 body.dark-mode .exercise-panel { background: #1f1f1f; }
+body.dark-mode .day-exercise-card,
+body.dark-mode .day-exercise-card .exercise-panel { background: #2D2D2D; }
 body.dark-mode .calendar-day { color: #aeb6b2; background: #2D2D2D; border-color: transparent; }
 body.dark-mode .card,
 body.dark-mode .day-exercise-card,
