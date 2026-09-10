@@ -2,8 +2,6 @@ const STORAGE_KEY = "gymlog-data-v1";
 const DEFAULT_EXERCISES = ["Bankdrücken", "Kniebeugen", "Kreuzheben"];
 
 const elements = {
-  exerciseList: document.querySelector("#exercise-list"),
-  emptyExercises: document.querySelector("#empty-exercises"),
   totalSets: document.querySelector("#total-sets"),
   todayLabel: document.querySelector("#today-label"),
   message: document.querySelector("#app-message"),
@@ -12,25 +10,14 @@ const elements = {
   exerciseForm: document.querySelector("#exercise-form"),
   exerciseName: document.querySelector("#exercise-name"),
   exerciseNameError: document.querySelector("#exercise-name-error"),
-  planSelect: document.querySelector("#plan-select"),
-  planList: document.querySelector("#plan-list"),
-  activePlanName: document.querySelector("#active-plan-name"),
   trainingDays: document.querySelector("#training-days"),
   trainingDayTabs: document.querySelector("#training-day-tabs"),
   emptyPlan: document.querySelector("#empty-plan"),
-  addDayButton: document.querySelector("#add-day-button"),
   dayExerciseSelect: document.querySelector("#day-exercise-select"),
-  planDialog: document.querySelector("#plan-dialog"),
-  planForm: document.querySelector("#plan-form"),
-  planName: document.querySelector("#plan-name"),
-  planNameError: document.querySelector("#plan-name-error"),
   dayDialog: document.querySelector("#day-dialog"),
   dayForm: document.querySelector("#day-form"),
   dayName: document.querySelector("#day-name"),
   dayNameError: document.querySelector("#day-name-error"),
-  chartExerciseSelect: document.querySelector("#chart-exercise-select"),
-  chart: document.querySelector("#progress-chart"),
-  emptyChart: document.querySelector("#empty-chart"),
 };
 
 let state = loadState();
@@ -127,12 +114,20 @@ function renderPlans() {
   elements.trainingDays.innerHTML = day ? day.exerciseIds.map((exerciseId) => renderDayExercise(exerciseId)).join("") : "";
   elements.emptyPlan.hidden = Boolean(day);
   renderExercises();
+  window.requestAnimationFrame(() => {
+    document.querySelectorAll("[data-chart-exercise]").forEach((canvas) => drawExerciseChart(canvas, canvas.dataset.chartExercise));
+  });
 }
 
 function renderDayExercise(exerciseId) {
   const exercise = state.exercises.find((item) => item.id === exerciseId);
   if (!exercise) return "";
   const entries = state.sets.filter((entry) => entry.exerciseId === exerciseId).sort((a, b) => `${b.date}${b.createdAt}`.localeCompare(`${a.date}${a.createdAt}`));
+  if (!Array.isArray(exercise.rows) || !exercise.rows.length) {
+    const rowId = createId();
+    exercise.rows = [{ id: rowId, weight: entries[0]?.weight || "", repetitions: entries[0]?.repetitions || "" }];
+    if (entries[0] && !entries[0].rowId) entries[0].rowId = rowId;
+  }
   const expanded = expandedExercises.has(exerciseId);
   const latest = entries[0];
   return `<article class="day-exercise-card ${expanded ? "expanded" : ""}">
@@ -144,47 +139,47 @@ function renderDayExercise(exerciseId) {
       <button class="icon-button delete exercise-remove" type="button" data-action="remove-day-exercise" data-id="${escapeHtml(exerciseId)}">Entfernen</button>
     </div>
     <div class="exercise-panel">
-      <form class="inline-set-form" data-exercise-id="${escapeHtml(exerciseId)}" novalidate>
-        <div class="field"><label>Gewicht (kg)</label><input name="weight" type="number" min="0" max="1000" step="0.5" required placeholder="60" /></div>
-        <div class="field"><label>Wiederholungen</label><input name="repetitions" type="number" min="1" max="1000" step="1" required placeholder="10" /></div>
-        <div class="field"><label>Anzahl Sätze</label><input name="setCount" type="number" min="1" max="30" step="1" value="3" required /></div>
-        <button class="button button-primary" type="submit">Sätze speichern</button>
-      </form>
-      <p class="today-note">Heute gespeichert · ${entries.length ? `${entries.length} historische Sätze` : "Noch kein Verlauf"}</p>
-      <div class="exercise-history">${entries.slice(0, 6).map((entry) => `<div><span>${formatDate(entry.date)}</span><strong>${entry.weight.toLocaleString("de-DE")} kg</strong><span>${entry.repetitions} Wdh.</span></div>`).join("") || '<p class="day-empty">Dein Gewichtsverlauf erscheint hier.</p>'}</div>
+      <div class="set-rows" data-exercise-id="${escapeHtml(exerciseId)}">
+        ${exercise.rows.map((row, index) => `<div class="set-row">
+          <span class="set-number">${index + 1}</span>
+          <label>Gewicht<input data-row-field="weight" data-row-id="${escapeHtml(row.id)}" type="number" min="0" max="1000" step="0.5" value="${escapeHtml(row.weight)}" placeholder="kg" /></label>
+          <label>Wdh.<input data-row-field="repetitions" data-row-id="${escapeHtml(row.id)}" type="number" min="1" max="1000" step="1" value="${escapeHtml(row.repetitions)}" placeholder="10" /></label>
+          <button class="icon-button" type="button" data-action="remove-row" data-exercise-id="${escapeHtml(exerciseId)}" data-row-id="${escapeHtml(row.id)}" aria-label="Satz entfernen">−</button>
+        </div>`).join("")}
+      </div>
+      <button class="button button-quiet button-small add-set-button" type="button" data-action="add-row" data-exercise-id="${escapeHtml(exerciseId)}">+ Satz</button>
+      <p class="today-note">Sätze werden automatisch gespeichert · ${entries.length ? `${entries.length} historische Einträge` : "Noch kein Verlauf"}</p>
+      <div class="exercise-chart"><canvas data-chart-exercise="${escapeHtml(exerciseId)}" aria-label="Gewichtsverlauf ${escapeHtml(exercise.name)}"></canvas><p class="chart-empty">${entries.length ? "" : "Noch keine historischen Gewichte."}</p></div>
     </div>
   </article>`;
 }
 
-function renderChartExerciseOptions(sortedExercises) {
-  const previous = elements.chartExerciseSelect.value;
-  elements.chartExerciseSelect.innerHTML = sortedExercises.length
-    ? sortedExercises.map((exercise) => `<option value="${escapeHtml(exercise.id)}">${escapeHtml(exercise.name)}</option>`).join("")
-    : '<option value="">Keine Übungen</option>';
-  if (sortedExercises.some((exercise) => exercise.id === previous)) elements.chartExerciseSelect.value = previous;
-  elements.chartExerciseSelect.disabled = !sortedExercises.length;
-  drawChart();
-}
-
-function drawChart() {
-  const canvas = elements.chart;
-  const entries = state.sets.filter((entry) => entry.exerciseId === elements.chartExerciseSelect.value)
-    .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
+function drawExerciseChart(canvas, exerciseId) {
+  const entriesByDate = new Map();
+  state.sets.filter((entry) => entry.exerciseId === exerciseId).forEach((entry) => {
+    const weights = entriesByDate.get(entry.date) || [];
+    weights.push(Number(entry.weight));
+    entriesByDate.set(entry.date, weights);
+  });
+  const points = [...entriesByDate.entries()].sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, weights]) => {
+      const sorted = weights.sort((a, b) => b - a);
+      return { date, highest: sorted[0], second: sorted[1] ?? null };
+    });
   const context = canvas.getContext("2d");
   const width = canvas.clientWidth || 600;
-  const height = 260;
+  const height = 220;
   const ratio = window.devicePixelRatio || 1;
   canvas.width = width * ratio;
   canvas.height = height * ratio;
   context.scale(ratio, ratio);
   context.clearRect(0, 0, width, height);
-  elements.emptyChart.hidden = entries.length > 1;
-  if (entries.length < 2) return;
+  if (!points.length) return;
   const padding = { top: 20, right: 18, bottom: 38, left: 44 };
-  const max = Math.max(...entries.map((entry) => entry.weight), 1);
-  const min = Math.min(...entries.map((entry) => entry.weight), 0);
+  const max = Math.max(...points.flatMap((point) => [point.highest, point.second || point.highest]), 1);
+  const min = Math.min(...points.flatMap((point) => [point.highest, point.second || point.highest]), 0);
   const range = Math.max(max - min, 1);
-  const x = (index) => padding.left + (index / (entries.length - 1)) * (width - padding.left - padding.right);
+  const x = (index) => padding.left + (index / Math.max(points.length - 1, 1)) * (width - padding.left - padding.right);
   const y = (weight) => padding.top + (1 - (weight - min) / range) * (height - padding.top - padding.bottom);
   context.strokeStyle = "#dce5df";
   context.lineWidth = 1;
@@ -199,21 +194,29 @@ function drawChart() {
     context.stroke();
     context.fillText(`${value.toLocaleString("de-DE", { maximumFractionDigits: 1 })} kg`, 4, position + 4);
   }
-  context.strokeStyle = "#246b4a";
-  context.lineWidth = 3;
-  context.beginPath();
-  entries.forEach((entry, index) => index ? context.lineTo(x(index), y(entry.weight)) : context.moveTo(x(index), y(entry.weight)));
-  context.stroke();
-  entries.forEach((entry, index) => {
-    context.fillStyle = "#e58b51";
+  const drawLine = (key, color, lineWidth) => {
+    context.strokeStyle = color;
+    context.lineWidth = lineWidth;
     context.beginPath();
-    context.arc(x(index), y(entry.weight), 5, 0, Math.PI * 2);
+    points.forEach((point, index) => {
+      if (point[key] == null) return;
+      if (index) context.lineTo(x(index), y(point[key]));
+      else context.moveTo(x(index), y(point[key]));
+    });
+    context.stroke();
+  };
+  drawLine("second", "#a8d5b8", 1.5);
+  drawLine("highest", "#246b4a", 3);
+  points.forEach((point, index) => {
+    context.fillStyle = "#246b4a";
+    context.beginPath();
+    context.arc(x(index), y(point.highest), 4, 0, Math.PI * 2);
     context.fill();
   });
   context.fillStyle = "#718078";
-  context.fillText(formatDate(entries[0].date), padding.left, height - 12);
+  context.fillText(formatDate(points[0].date), padding.left, height - 12);
   context.textAlign = "right";
-  context.fillText(formatDate(entries[entries.length - 1].date), width - padding.right, height - 12);
+  context.fillText(formatDate(points[points.length - 1].date), width - padding.right, height - 12);
   context.textAlign = "left";
 }
 
@@ -362,6 +365,18 @@ document.addEventListener("click", (event) => {
     }
     renderPlans();
   }
+  if (action === "add-row" || action === "remove-row") {
+    const exercise = state.exercises.find((item) => item.id === button.dataset.exerciseId);
+    if (!exercise) return;
+    exercise.rows = Array.isArray(exercise.rows) ? exercise.rows : [];
+    if (action === "add-row") exercise.rows.push({ id: createId(), weight: "", repetitions: "" });
+    if (action === "remove-row" && exercise.rows.length > 1) {
+      exercise.rows = exercise.rows.filter((row) => row.id !== button.dataset.rowId);
+      state.sets = state.sets.filter((entry) => entry.rowId !== button.dataset.rowId);
+    }
+    saveState();
+    renderPlans();
+  }
   if (action === "edit") {
     const exercise = state.exercises.find((item) => item.id === id);
     if (exercise) openExerciseDialog(exercise);
@@ -394,6 +409,31 @@ document.addEventListener("click", (event) => {
     renderPlans();
     showMessage("Übung aus dem Trainingstag entfernt.");
   }
+});
+
+document.addEventListener("input", (event) => {
+  const input = event.target.closest("[data-row-field]");
+  if (!input) return;
+  const exerciseId = input.closest("[data-exercise-id]")?.dataset.exerciseId;
+  const exercise = state.exercises.find((item) => item.id === exerciseId);
+  const row = exercise?.rows?.find((item) => item.id === input.dataset.rowId);
+  if (!row) return;
+  row[input.dataset.rowField] = input.value;
+  const weight = Number(row.weight);
+  const repetitions = Number(row.repetitions);
+  const existing = state.sets.find((entry) => entry.rowId === row.id);
+  if (Number.isFinite(weight) && weight >= 0 && Number.isInteger(repetitions) && repetitions > 0) {
+    const entry = existing || { id: createId(), rowId: row.id, exerciseId, createdAt: Date.now() };
+    Object.assign(entry, { weight, repetitions, date: today() });
+    if (!existing) state.sets.push(entry);
+  } else if (existing) {
+    state.sets = state.sets.filter((entry) => entry.rowId !== row.id);
+  }
+  saveState();
+  elements.totalSets.textContent = state.sets.length.toLocaleString("de-DE");
+  window.requestAnimationFrame(() => {
+    document.querySelectorAll("[data-chart-exercise]").forEach((canvas) => drawExerciseChart(canvas, canvas.dataset.chartExercise));
+  });
 });
 
 document.addEventListener("dblclick", (event) => {
