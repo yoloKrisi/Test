@@ -49,15 +49,16 @@ function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (saved && Array.isArray(saved.exercises) && Array.isArray(saved.sets)) {
+      const plans = (Array.isArray(saved.plans) ? saved.plans : []).map((plan) => ({
+        ...plan,
+        days: (Array.isArray(plan.days) ? plan.days : []).map((day) => ({
+          ...day,
+          exerciseIds: Array.isArray(day.exerciseIds) ? day.exerciseIds : [],
+        })),
+      }));
       return {
         ...saved,
-        plans: (Array.isArray(saved.plans) ? saved.plans : []).map((plan) => ({
-          ...plan,
-          days: (Array.isArray(plan.days) ? plan.days : []).map((day) => ({
-            ...day,
-            exerciseIds: Array.isArray(day.exerciseIds) ? day.exerciseIds : [],
-          })),
-        })),
+        plans: plans.length ? plans : [{ id: createId(), name: "Mein Training", days: [] }],
       };
     }
   } catch (error) {
@@ -66,7 +67,7 @@ function loadState() {
   return {
     exercises: DEFAULT_EXERCISES.map((name) => ({ id: createId(), name })),
     sets: [],
-    plans: [],
+    plans: [{ id: createId(), name: "Mein Training", days: [] }],
   };
 }
 
@@ -98,48 +99,36 @@ function showMessage(text) {
 }
 
 function renderExercises() {
-  const sorted = [...state.exercises].sort((a, b) => a.name.localeCompare(b.name, "de"));
-  elements.exerciseList.innerHTML = sorted.map((exercise) => `
-    <div class="exercise-row">
-      <span class="exercise-name">${escapeHtml(exercise.name)}</span>
-      <span class="exercise-actions">
-        <button class="icon-button" type="button" data-action="edit" data-id="${escapeHtml(exercise.id)}">Bearbeiten</button>
-        <button class="icon-button delete" type="button" data-action="delete" data-id="${escapeHtml(exercise.id)}">Löschen</button>
-      </span>
-    </div>
-  `).join("");
-  elements.emptyExercises.hidden = sorted.length > 0;
-  renderChartExerciseOptions(sorted);
+  const available = state.exercises.filter((exercise) => !activeDay()?.exerciseIds.includes(exercise.id));
+  elements.dayExerciseSelect.innerHTML = available.length
+    ? available.map((exercise) => `<option value="${escapeHtml(exercise.id)}">${escapeHtml(exercise.name)}</option>`).join("")
+    : '<option value="">Alle Übungen sind bereits hinzugefügt</option>';
+  elements.dayExerciseSelect.disabled = !activeDay() || !available.length;
+  document.querySelector("#add-day-exercise-button").disabled = !activeDay() || !available.length;
+}
+
+function activePlan() {
+  return state.plans[0];
+}
+
+function activeDay() {
+  return activePlan()?.days.find((day) => day.id === activeDayId);
 }
 
 function renderPlans() {
-  const plans = state.plans || [];
-  if (activePlanId && !plans.some((plan) => plan.id === activePlanId)) activePlanId = null;
-  if (!activePlanId && plans.length) activePlanId = plans[0].id;
-  elements.planSelect.innerHTML = plans.length
-    ? plans.map((plan) => `<option value="${escapeHtml(plan.id)}">${escapeHtml(plan.name)}</option>`).join("")
-    : '<option value="">Noch kein Trainingsplan</option>';
-  elements.planSelect.disabled = !plans.length;
-  if (activePlanId) elements.planSelect.value = activePlanId;
-  const activePlan = plans.find((plan) => plan.id === activePlanId);
-  if (activeDayId && !activePlan?.days.some((day) => day.id === activeDayId)) activeDayId = null;
-  if (!activeDayId && activePlan?.days.length) activeDayId = activePlan.days[0].id;
-  elements.trainingDayTabs.innerHTML = activePlan?.days.map((day) => `
+  const plan = activePlan();
+  if (activeDayId && !plan?.days.some((day) => day.id === activeDayId)) activeDayId = null;
+  if (!activeDayId && plan?.days.length) activeDayId = plan.days[0].id;
+  elements.trainingDayTabs.innerHTML = (plan?.days || []).map((day) => `
     <button class="training-day-tab ${day.id === activeDayId ? "active" : ""}" type="button"
       role="tab" aria-selected="${day.id === activeDayId}" data-action="select-day" data-id="${escapeHtml(day.id)}">
       ${escapeHtml(day.name)}
     </button>
-  `).join("") || "";
-  elements.addDayButton.disabled = !activePlan;
-  const activeDay = activePlan?.days.find((day) => day.id === activeDayId);
-  elements.trainingDays.innerHTML = activeDay ? activeDay.exerciseIds.map((exerciseId) => renderDayExercise(exerciseId)).join("") : "";
-  elements.emptyPlan.hidden = Boolean(activeDay);
-  const available = state.exercises.filter((exercise) => !activeDay?.exerciseIds.includes(exercise.id));
-  elements.dayExerciseSelect.innerHTML = available.length
-    ? available.map((exercise) => `<option value="${escapeHtml(exercise.id)}">${escapeHtml(exercise.name)}</option>`).join("")
-    : '<option value="">Alle Übungen sind bereits hinzugefügt</option>';
-  elements.dayExerciseSelect.disabled = !activeDay || !available.length;
-  document.querySelector("#add-day-exercise-button").disabled = !activeDay || !available.length;
+  `).join("") + '<button class="training-day-tab add-tab" type="button" data-action="add-day" aria-label="Neuen Trainingstag hinzufügen">+</button>';
+  const day = activeDay();
+  elements.trainingDays.innerHTML = day ? day.exerciseIds.map((exerciseId) => renderDayExercise(exerciseId)).join("") : "";
+  elements.emptyPlan.hidden = Boolean(day);
+  renderExercises();
 }
 
 function renderDayExercise(exerciseId) {
@@ -339,52 +328,28 @@ elements.exerciseForm.addEventListener("submit", (event) => {
   closeExerciseDialog();
 });
 
-document.querySelector("#add-plan-button").addEventListener("click", openPlanDialog);
-document.querySelector("#close-plan-dialog-button").addEventListener("click", closePlanDialog);
-document.querySelector("#cancel-plan-dialog-button").addEventListener("click", closePlanDialog);
-elements.planForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const name = elements.planName.value.trim().replace(/\s+/g, " ");
-  const duplicate = state.plans.some((plan) => plan.name.toLocaleLowerCase() === name.toLocaleLowerCase());
-  if (name.length < 2 || duplicate) {
-    elements.planNameError.textContent = duplicate ? "Diesen Plan gibt es bereits." : "Bitte gib mindestens 2 Zeichen ein.";
-    return;
-  }
-  const plan = { id: createId(), name, days: [] };
-  state.plans.push(plan);
-  activePlanId = plan.id;
-  saveState();
-  render();
-  closePlanDialog();
-  showMessage("Trainingsplan erstellt.");
-});
-
-document.querySelector("#add-day-button").addEventListener("click", openDayDialog);
 document.querySelector("#close-day-dialog-button").addEventListener("click", closeDayDialog);
 document.querySelector("#cancel-day-dialog-button").addEventListener("click", closeDayDialog);
 elements.dayForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const name = elements.dayName.value.trim().replace(/\s+/g, " ");
-  const plan = state.plans.find((item) => item.id === activePlanId);
+  const plan = activePlan();
   if (!plan) return;
   if (name.length < 2 || plan.days.some((day) => day.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
     elements.dayNameError.textContent = "Bitte einen eindeutigen Namen mit mindestens 2 Zeichen eingeben.";
     return;
   }
-  plan.days.push({ id: createId(), name, exerciseIds: [] });
+  const day = { id: createId(), name, exerciseIds: [] };
+  plan.days.push(day);
+  activeDayId = day.id;
   saveState();
   render();
   closeDayDialog();
   showMessage("Trainingstag hinzugefügt.");
 });
 
-elements.planSelect.addEventListener("change", () => {
-  activePlanId = elements.planSelect.value || null;
-  activeDayId = null;
-  renderPlans();
-});
 document.querySelector("#add-day-exercise-button").addEventListener("click", () => {
-  const plan = state.plans.find((item) => item.id === activePlanId);
+  const plan = activePlan();
   const day = plan?.days.find((item) => item.id === activeDayId);
   const exerciseId = elements.dayExerciseSelect.value;
   if (!day || !exerciseId || day.exerciseIds.includes(exerciseId)) return;
@@ -393,8 +358,6 @@ document.querySelector("#add-day-exercise-button").addEventListener("click", () 
   renderPlans();
   showMessage("Übung zum Trainingstag hinzugefügt.");
 });
-elements.chartExerciseSelect.addEventListener("change", drawChart);
-window.addEventListener("resize", drawChart);
 
 document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-action]");
@@ -404,9 +367,13 @@ document.addEventListener("click", (event) => {
     activeDayId = id;
     renderPlans();
   }
+  if (action === "add-day") openDayDialog();
   if (action === "toggle-exercise") {
-    if (expandedExercises.has(id)) expandedExercises.delete(id);
-    else expandedExercises.add(id);
+    if (expandedExercises.has(id)) expandedExercises.clear();
+    else {
+      expandedExercises.clear();
+      expandedExercises.add(id);
+    }
     renderPlans();
   }
   if (action === "edit") {
@@ -430,17 +397,8 @@ document.addEventListener("click", (event) => {
     render();
     showMessage("Satz aus dem Verlauf entfernt.");
   }
-  if (action === "delete-plan") {
-    const plan = state.plans.find((item) => item.id === id);
-    if (!plan || !window.confirm(`"${plan.name}" wirklich löschen?`)) return;
-    state.plans = state.plans.filter((item) => item.id !== id);
-    activePlanId = state.plans[0]?.id || null;
-    saveState();
-    render();
-    showMessage("Trainingsplan gelöscht.");
-  }
   if (action === "delete-day") {
-    const plan = state.plans.find((item) => item.id === activePlanId);
+    const plan = activePlan();
     if (!plan || !window.confirm("Diesen Trainingstag wirklich löschen?")) return;
     plan.days = plan.days.filter((day) => day.id !== id);
     saveState();
@@ -448,7 +406,7 @@ document.addEventListener("click", (event) => {
     showMessage("Trainingstag gelöscht.");
   }
   if (action === "remove-day-exercise") {
-    const plan = state.plans.find((item) => item.id === activePlanId);
+    const plan = activePlan();
     const day = plan?.days.find((item) => item.id === activeDayId);
     if (!day || !window.confirm("Diese Übung aus dem Trainingstag entfernen?")) return;
     day.exerciseIds = day.exerciseIds.filter((exerciseId) => exerciseId !== id);
@@ -456,6 +414,23 @@ document.addEventListener("click", (event) => {
     renderPlans();
     showMessage("Übung aus dem Trainingstag entfernt.");
   }
+});
+
+document.addEventListener("dblclick", (event) => {
+  const tab = event.target.closest(".training-day-tab[data-id]");
+  if (!tab) return;
+  const day = activePlan()?.days.find((item) => item.id === tab.dataset.id);
+  if (!day) return;
+  const name = window.prompt("Name des Trainingstags:", day.name)?.trim().replace(/\s+/g, " ");
+  if (!name || name === day.name) return;
+  if (activePlan().days.some((item) => item.id !== day.id && item.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+    showMessage("Diesen Trainingstag gibt es bereits.");
+    return;
+  }
+  day.name = name;
+  saveState();
+  renderPlans();
+  showMessage("Trainingstag umbenannt.");
 });
 
 document.addEventListener("submit", (event) => {

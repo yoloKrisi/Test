@@ -14,12 +14,6 @@
           <span class="brand-mark" aria-hidden="true">G</span>
           <span>Gym<span class="brand-accent">Log</span></span>
         </a>
-        <nav class="main-nav" aria-label="Hauptnavigation">
-          <a href="#overview">Übersicht</a>
-          <a href="#plan-section">Trainingsplan</a>
-          <a href="#log-section">Training erfassen</a>
-          <a href="#progress-section">Fortschritt</a>
-        </nav>
         <p class="header-date" id="today-label"></p>
       </div>
     </header>
@@ -42,38 +36,21 @@
       <section class="card plans-card" id="plan-section" aria-labelledby="plans-title">
         <div class="card-heading">
           <div>
-            <p class="section-label">Organisation</p>
-            <h2 id="plans-title">Trainingspläne</h2>
+            <p class="section-label">Dein Training</p>
+            <h2 id="plans-title">Trainingstag</h2>
           </div>
-          <button class="button button-small" id="add-plan-button" type="button">+ Neuer Plan</button>
-        </div>
-        <div class="plan-toolbar">
-          <label for="plan-select">Aktiver Trainingsplan</label>
-          <select id="plan-select"></select>
-          <button class="button button-quiet button-small" id="add-day-button" type="button">+ Trainingstag</button>
         </div>
         <div id="training-day-tabs" class="training-day-tabs" role="tablist" aria-label="Trainingstage"></div>
         <div id="training-days" class="training-days"></div>
-        <p id="empty-plan" class="empty-state">Lege einen Plan und anschließend deine Trainingstage an.</p>
+        <p id="empty-plan" class="empty-state">Lege deinen ersten Trainingstag über das Plus an.</p>
         <div class="day-exercise-adder">
-          <label for="day-exercise-select">Übung zum aktuellen Trainingstag hinzufügen</label>
+          <label for="day-exercise-select">Übung zum Trainingstag hinzufügen</label>
           <div class="add-exercise-row">
             <select id="day-exercise-select"></select>
             <button class="button button-primary button-small" id="add-day-exercise-button" type="button">+ Übung hinzufügen</button>
+            <button class="button button-quiet button-small" id="add-exercise-button" type="button">+ Neue Übung</button>
           </div>
         </div>
-      </section>
-
-      <section class="card exercise-library-card" id="log-section" aria-label="Übungsbibliothek">
-        <div class="card-heading">
-          <div>
-            <p class="section-label">Bibliothek</p>
-            <h2>Übungen verwalten</h2>
-          </div>
-          <button class="button button-small" id="add-exercise-button" type="button">+ Neue Übung</button>
-        </div>
-        <div id="exercise-list" class="exercise-list"></div>
-        <p id="empty-exercises" class="empty-state">Noch keine Übungen angelegt.</p>
       </section>
 
       <section class="card history-card" aria-labelledby="history-title">
@@ -88,19 +65,6 @@
         <p id="empty-history" class="empty-state">Dein Trainingsverlauf ist noch leer. Der erste Satz wartet auf dich.</p>
       </section>
 
-      <section class="card chart-card" id="progress-section" aria-labelledby="chart-title">
-        <div class="card-heading">
-          <div>
-            <p class="section-label">Fortschritt</p>
-            <h2 id="chart-title">Gewichtsentwicklung</h2>
-          </div>
-          <select id="chart-exercise-select" class="chart-select" aria-label="Übung für Diagramm auswählen"></select>
-        </div>
-        <div class="chart-wrap">
-          <canvas id="progress-chart" aria-label="Diagramm der Gewichtsentwicklung"></canvas>
-          <p id="empty-chart" class="empty-state">Erfasse mehrere Sätze, um deine Entwicklung zu sehen.</p>
-        </div>
-      </section>
     </main>
 
     <dialog id="exercise-dialog" class="modal">
@@ -120,27 +84,6 @@
         <div class="modal-actions">
           <button class="button button-quiet" id="cancel-dialog-button" type="button">Abbrechen</button>
           <button class="button button-primary" type="submit">Speichern</button>
-        </div>
-      </form>
-    </dialog>
-
-    <dialog id="plan-dialog" class="modal">
-      <form id="plan-form" method="dialog">
-        <div class="modal-heading">
-          <div>
-            <p class="section-label">Trainingsplan</p>
-            <h2>Plan erstellen</h2>
-          </div>
-          <button class="close-button" id="close-plan-dialog-button" type="button" aria-label="Dialog schließen">×</button>
-        </div>
-        <div class="field">
-          <label for="plan-name">Name des Plans</label>
-          <input id="plan-name" maxlength="60" required placeholder="z. B. Muskelaufbau" />
-          <p class="field-error" id="plan-name-error"></p>
-        </div>
-        <div class="modal-actions">
-          <button class="button button-quiet" id="cancel-plan-dialog-button" type="button">Abbrechen</button>
-          <button class="button button-primary" type="submit">Plan speichern</button>
         </div>
       </form>
     </dialog>

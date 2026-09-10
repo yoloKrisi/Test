@@ -50,6 +50,7 @@ h1 span { color: var(--green); }
 .training-day-tabs { display: flex; gap: 5px; overflow-x: auto; border-bottom: 1px solid var(--line); }
 .training-day-tab { padding: 11px 16px; color: var(--muted); border: 1px solid transparent; border-bottom: 0; border-radius: 10px 10px 0 0; background: transparent; white-space: nowrap; font-weight: 750; }
 .training-day-tab.active { color: var(--green-dark); background: #f7faf7; border-color: var(--line); }
+.training-day-tab.add-tab { min-width: 42px; color: var(--green); font-size: 1.25rem; }
 .training-days { display: grid; gap: 9px; padding-top: 18px; }
 .day-exercise-card { overflow: hidden; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
 .exercise-toggle { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 16px 8px 16px; }
