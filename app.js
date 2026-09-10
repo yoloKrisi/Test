@@ -336,23 +336,31 @@ function renderHistory() {
     elements.frequencyStats.innerHTML = "";
     return;
   }
-  const firstDate = new Date(`${dates[0]}T12:00:00`);
-  const lastDate = new Date(`${dates[dates.length - 1]}T12:00:00`);
-  const elapsedDays = Math.floor((lastDate - firstDate) / 86400000) + 1;
-  const weeks = Math.max(1, elapsedDays / 7);
-  const countActivityDates = (predicate) => dates.reduce((count, date) => (
-    predicate(state.calendar[date] || []) ? count + 1 : count
-  ), 0);
-  const trainingCount = dates.reduce((count, date) => (
-    count + (state.calendar[date] || []).filter(isTrainingMarker).length
-  ), 0);
-  const runningCount = countActivityDates((markers) => markers.includes("laufen"));
-  const saunaCount = countActivityDates((markers) => markers.includes("sauna"));
-  const stat = (label, count, className) => `<span class="frequency-stat ${className}"><strong>${(count / weeks).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</strong> ${label} / Woche</span>`;
+  const activityFrequency = (matches, countEntries) => {
+    const activityDates = dates.filter((date) => matches(state.calendar[date] || []));
+    if (!activityDates.length) return null;
+    const firstDate = new Date(`${activityDates[0]}T12:00:00`);
+    const lastDate = new Date(`${activityDates[activityDates.length - 1]}T12:00:00`);
+    const weeks = Math.max(1, (Math.floor((lastDate - firstDate) / 86400000) + 1) / 7);
+    return countEntries(activityDates) / weeks;
+  };
+  const trainingFrequency = activityFrequency(
+    (markers) => markers.some(isTrainingMarker),
+    (activityDates) => activityDates.reduce((count, date) => count + state.calendar[date].filter(isTrainingMarker).length, 0),
+  );
+  const runningFrequency = activityFrequency(
+    (markers) => markers.includes("laufen"),
+    (activityDates) => activityDates.length,
+  );
+  const saunaFrequency = activityFrequency(
+    (markers) => markers.includes("sauna"),
+    (activityDates) => activityDates.length,
+  );
+  const stat = (label, frequency, className) => `<span class="frequency-stat ${className}"><strong>${frequency.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</strong> ${label} / Woche</span>`;
   elements.frequencyStats.innerHTML = [
-    activePlan()?.days.length ? stat("Trainingstage", trainingCount, "training-frequency") : "",
-    runningCount ? stat("Laufen", runningCount, "running-frequency") : "",
-    saunaCount ? stat("Sauna", saunaCount, "sauna-frequency") : "",
+    trainingFrequency !== null ? stat("Trainingstage", trainingFrequency, "training-frequency") : "",
+    runningFrequency !== null ? stat("Laufen", runningFrequency, "running-frequency") : "",
+    saunaFrequency !== null ? stat("Sauna", saunaFrequency, "sauna-frequency") : "",
   ].filter(Boolean).join("");
 }
 
