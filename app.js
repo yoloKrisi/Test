@@ -343,9 +343,9 @@ function renderHistory() {
   const trainingCount = countDates((markers) => markers.some(isTrainingMarker));
   const runningCount = countDates((markers) => markers.includes("laufen"));
   const saunaCount = countDates((markers) => markers.includes("sauna"));
-  const stat = (label, count, className) => `<span class="frequency-stat ${className}"><strong>${(count / weeks).toLocaleString("de-DE", { maximumFractionDigits: 2 })}</strong> ${label} / Woche</span>`;
+  const stat = (label, count, className) => `<span class="frequency-stat ${className}"><strong>${(count / weeks).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</strong> ${label} / Woche</span>`;
   elements.frequencyStats.innerHTML = [
-    trainingCount ? stat("Training", trainingCount, "training-frequency") : "",
+    activePlan()?.days.length ? stat("Trainingstage", trainingCount, "training-frequency") : "",
     runningCount ? stat("Laufen", runningCount, "running-frequency") : "",
     saunaCount ? stat("Sauna", saunaCount, "sauna-frequency") : "",
   ].filter(Boolean).join("");
