@@ -182,7 +182,7 @@ function renderCalendar() {
     const trainingClass = trainingMark ? " training-day" : "";
     const stackedClass = trainingMark && mark.includes("laufen") ? " stacked-markers" : "";
     const markerHtml = mark.filter((name) => name !== "sauna").map((name) => isTrainingMarker(name)
-      ? `<span class="training-day-label">${escapeHtml(markerLabel(name))}</span>`
+      ? `<span class="training-day-label" data-training-day-id="${escapeHtml(name.slice("training:".length))}">${escapeHtml(markerLabel(name))}</span>`
       : symbolMarkup(name)).join("");
     elements.calendarGrid.insertAdjacentHTML("beforeend", `<button class="calendar-day ${classes}${trainingClass}" type="button" data-date="${date}">${day}<span class="calendar-symbols${stackedClass}">${markerHtml}</span></button>`);
   }
@@ -585,8 +585,10 @@ document.addEventListener("input", (event) => {
 
 document.addEventListener("dblclick", (event) => {
   const tab = event.target.closest(".training-day-tab[data-id]");
-  if (!tab) return;
-  const day = activePlan()?.days.find((item) => item.id === tab.dataset.id);
+  const label = event.target.closest("[data-training-day-id]");
+  const dayId = tab?.dataset.id || label?.dataset.trainingDayId;
+  if (!dayId) return;
+  const day = activePlan()?.days.find((item) => item.id === dayId);
   if (!day) return;
   const enteredName = window.prompt("Trainingstag bearbeiten. Für Löschen den Namen leeren:", day.name);
   if (enteredName === null) return;
