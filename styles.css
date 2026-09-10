@@ -29,6 +29,7 @@ button { cursor: pointer; }
 .main-nav a:hover, .main-nav a:focus-visible { color: #fff; }
 .app-shell { max-width: 1120px; margin: auto; padding: 58px 28px 80px; }
 .app-shell { padding-top: 34px; }
+.theme-toggle { display: block; margin: 0 0 16px auto; padding: 8px 12px; color: var(--ink); border: 1px solid var(--line); border-radius: 9px; background: var(--card); font-size: .76rem; font-weight: 750; }
 .set-counter { margin: 14px 2px 0; color: var(--muted); font-size: .82rem; text-align: right; }
 .set-counter strong { color: var(--green); font-size: 1rem; }
 .tracker-row { display: flex; justify-content: flex-end; gap: 22px; margin: 14px 2px 0; color: var(--muted); font-size: .82rem; }
@@ -165,6 +166,38 @@ input:user-invalid { border-color: #dba0a0; }
 .modal-heading { display: flex; justify-content: space-between; margin-bottom: 24px; }
 .close-button { padding: 0 4px; color: var(--muted); font-size: 1.7rem; line-height: 1; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 5px; }
+
+body.dark-mode {
+  --ink: #e6eee9;
+  --muted: #9aaba2;
+  --line: #35483f;
+  --paper: #101714;
+  --card: #18231e;
+  --green: #6fcf97;
+  --green-dark: #b4e8c9;
+  --mint: #213c2e;
+  --orange: #f2a05f;
+  --danger: #f08a8a;
+}
+body.dark-mode .day-exercise-card,
+body.dark-mode .calendar-day,
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode .modal,
+body.dark-mode .symbol-choice { background: var(--card); }
+body.dark-mode .exercise-panel { background: #142019; }
+body.dark-mode .calendar-day.restday { color: #c0c7c3; background: #333b38; border-color: #737e79; }
+body.dark-mode .calendar-day.krankheit { background: #4b2529; }
+body.dark-mode .calendar-day.laufen { background: #1d3658; border-color: #5796e8; }
+body.dark-mode .calendar-day.training-day,
+body.dark-mode .calendar-day.training-day.laufen { color: #07140c; background: #8fd3ad; border-color: #116b45; }
+body.dark-mode .training-day-picker { color: #07140c; }
+body.dark-mode .exercise-row,
+body.dark-mode .history-row,
+body.dark-mode .exercise-history > div { background: #213028; }
+body.dark-mode .training-day-tab.active { background: var(--card); }
+body.dark-mode .button-quiet { color: var(--ink); background: #293a31; }
+body.dark-mode .calendar-day:hover { background: #294636; }
 
 @media (max-width: 700px) {
   .header-content, .app-shell { padding-left: 18px; padding-right: 18px; }
