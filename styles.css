@@ -191,8 +191,10 @@ body.dark-mode .calendar-day.restday { color: #c0c7c3; background: #333b38; bord
 body.dark-mode .calendar-day.krankheit { background: #4b2529; }
 body.dark-mode .calendar-day.laufen { background: #1d3658; border-color: #5796e8; }
 body.dark-mode .calendar-day.training-day,
-body.dark-mode .calendar-day.training-day.laufen { color: #111; background: #c3c8c6; border-color: #aeb6b2; }
-body.dark-mode .training-day-picker { color: #111; border-color: #aeb6b2; background: #c3c8c6; }
+body.dark-mode .calendar-day.training-day.laufen { color: #fff; background: #006400; border-color: #006400; }
+body.dark-mode .training-day-picker { color: #fff; border-color: #006400; background: #006400; }
+body.dark-mode .symbol-legend { color: #aeb6b2; }
+body.dark-mode .symbol-legend .training-day-legend { color: #aeb6b2; }
 body.dark-mode .exercise-row,
 body.dark-mode .history-row,
 body.dark-mode .exercise-history > div { background: #151b23; }
