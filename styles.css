@@ -31,6 +31,18 @@ button { cursor: pointer; }
 .app-shell { padding-top: 34px; }
 .set-counter { margin: 14px 2px 0; color: var(--muted); font-size: .82rem; text-align: right; }
 .set-counter strong { color: var(--green); font-size: 1rem; }
+.tracker-row { display: flex; justify-content: flex-end; gap: 22px; margin: 14px 2px 0; color: var(--muted); font-size: .82rem; }
+.tracker-row strong { color: var(--green); font-size: 1rem; }
+.calendar-panel { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+.calendar-heading { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 12px; color: var(--green-dark); text-transform: capitalize; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.calendar-grid > span { min-height: 32px; }
+.calendar-weekday { color: var(--muted); font-size: .68rem; font-weight: 800; text-align: center; }
+.calendar-day { position: relative; min-height: 34px; color: var(--ink); border: 2px solid var(--outer, transparent); border-radius: 8px; background: var(--inner, transparent); font-size: .78rem; }
+.calendar-day:hover { background: var(--mint); }
+.color-legend { display: flex; flex-wrap: wrap; gap: 10px; margin: 13px 0 10px; color: var(--muted); font-size: .72rem; }
+.color-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.color-legend i { width: 12px; height: 12px; border-radius: 4px; }
 .hero { display: flex; align-items: end; justify-content: space-between; gap: 30px; margin-bottom: 38px; }
 .eyebrow, .section-label { margin: 0 0 10px; color: var(--green); text-transform: uppercase; letter-spacing: .14em; font-size: .7rem; font-weight: 800; }
 h1, h2, p { margin-top: 0; }
@@ -61,6 +73,7 @@ h1 span { color: var(--green); }
 .exercise-remove { flex: 0 0 auto; }
 .exercise-toggle-name { font-weight: 800; }
 .exercise-toggle-meta { color: var(--muted); font-size: .76rem; }
+.mini-chart { display: inline-block; width: 92px; height: 42px; vertical-align: middle; }
 .chevron { display: inline-block; margin-left: 7px; font-size: 1rem; transition: transform .15s; }
 .day-exercise-card.expanded .chevron { transform: rotate(180deg); }
 .exercise-panel { display: none; padding: 0 16px 16px; border-top: 1px solid var(--line); background: #fbfdfb; }

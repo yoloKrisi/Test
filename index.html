@@ -12,6 +12,12 @@
       <div id="app-message" class="app-message" role="status" aria-live="polite"></div>
 
       <section class="card plans-card" id="plan-section" aria-labelledby="plans-title">
+        <div class="calendar-panel">
+          <div class="calendar-heading"><button class="icon-button" id="previous-month" type="button">‹</button><strong id="calendar-month"></strong><button class="icon-button" id="next-month" type="button">›</button></div>
+          <div id="calendar-grid" class="calendar-grid"></div>
+          <div id="color-legend" class="color-legend"></div>
+          <button class="button button-quiet button-small" id="add-color-button" type="button">+ Farbe hinzufügen</button>
+        </div>
         <div id="training-day-tabs" class="training-day-tabs" role="tablist" aria-label="Trainingstage"></div>
         <div id="training-days" class="training-days"></div>
         <p id="empty-plan" class="empty-state">Lege deinen ersten Trainingstag über das Plus an.</p>
@@ -24,7 +30,7 @@
           </div>
         </div>
       </section>
-      <div class="set-counter" aria-live="polite"><strong id="total-sets">0</strong> gespeicherte Sätze</div>
+      <div class="tracker-row" aria-live="polite"><span><strong id="total-sets">0</strong> gespeicherte Sätze</span><span><strong id="total-volume">0</strong> kg Gesamtgewicht</span></div>
 
     </main>
 
@@ -67,6 +73,24 @@
           <button class="button button-quiet" id="cancel-day-dialog-button" type="button">Abbrechen</button>
           <button class="button button-primary" type="submit">Tag speichern</button>
         </div>
+      </form>
+    </dialog>
+
+    <dialog id="date-dialog" class="modal">
+      <form id="date-form" method="dialog">
+        <div class="modal-heading"><div><p class="section-label">Kalender</p><h2 id="date-dialog-title">Datum markieren</h2></div><button class="close-button" id="close-date-dialog" type="button">×</button></div>
+        <div class="field"><label for="outer-color">Randfarbe</label><select id="outer-color"></select></div>
+        <div class="field"><label for="inner-color">Innenfarbe</label><select id="inner-color"></select></div>
+        <div class="modal-actions"><button class="button button-quiet" id="cancel-date-dialog" type="button">Abbrechen</button><button class="button button-primary" type="submit">Speichern</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="color-dialog" class="modal">
+      <form id="color-form" method="dialog">
+        <div class="modal-heading"><div><p class="section-label">Legende</p><h2>Farbe hinzufügen</h2></div><button class="close-button" id="close-color-dialog" type="button">×</button></div>
+        <div class="field"><label for="color-name">Name</label><input id="color-name" required placeholder="z. B. Urlaub" /></div>
+        <div class="field"><label for="color-value">Farbe</label><input id="color-value" type="color" value="#e58b51" /></div>
+        <div class="modal-actions"><button class="button button-quiet" id="cancel-color-dialog" type="button">Abbrechen</button><button class="button button-primary" type="submit">Hinzufügen</button></div>
       </form>
     </dialog>
 

@@ -3,6 +3,7 @@ const DEFAULT_EXERCISES = ["Bankdrücken", "Kniebeugen", "Kreuzheben"];
 
 const elements = {
   totalSets: document.querySelector("#total-sets"),
+  totalVolume: document.querySelector("#total-volume"),
   message: document.querySelector("#app-message"),
   dialog: document.querySelector("#exercise-dialog"),
   dialogTitle: document.querySelector("#dialog-title"),
@@ -17,12 +18,23 @@ const elements = {
   dayForm: document.querySelector("#day-form"),
   dayName: document.querySelector("#day-name"),
   dayNameError: document.querySelector("#day-name-error"),
+  calendarMonth: document.querySelector("#calendar-month"),
+  calendarGrid: document.querySelector("#calendar-grid"),
+  colorLegend: document.querySelector("#color-legend"),
+  dateDialog: document.querySelector("#date-dialog"),
+  dateForm: document.querySelector("#date-form"),
+  outerColor: document.querySelector("#outer-color"),
+  innerColor: document.querySelector("#inner-color"),
+  colorDialog: document.querySelector("#color-dialog"),
+  colorForm: document.querySelector("#color-form"),
 };
 
 let state = loadState();
 let editingExerciseId = null;
 let activePlanId = null;
 let activeDayId = null;
+let calendarCursor = new Date();
+let selectedDate = null;
 const expandedExercises = new Set();
 
 function createId() {
@@ -43,6 +55,8 @@ function loadState() {
       return {
         ...saved,
         plans: plans.length ? plans : [{ id: createId(), name: "Mein Training", days: [] }],
+        colors: Array.isArray(saved.colors) ? saved.colors : [{ id: "none", name: "Keine Farbe", value: "transparent" }],
+        calendar: saved.calendar || {},
       };
     }
   } catch (error) {
@@ -52,6 +66,8 @@ function loadState() {
     exercises: DEFAULT_EXERCISES.map((name) => ({ id: createId(), name })),
     sets: [],
     plans: [{ id: createId(), name: "Mein Training", days: [] }],
+    colors: [{ id: "none", name: "Keine Farbe", value: "transparent" }],
+    calendar: {},
   };
 }
 
@@ -91,6 +107,32 @@ function renderExercises() {
   document.querySelector("#add-day-exercise-button").disabled = !activeDay() || !available.length;
 }
 
+function renderCalendar() {
+  const year = calendarCursor.getFullYear();
+  const month = calendarCursor.getMonth();
+  elements.calendarMonth.textContent = new Intl.DateTimeFormat("de-DE", { month: "long", year: "numeric" }).format(calendarCursor);
+  const first = new Date(year, month, 1).getDay();
+  const offset = (first + 6) % 7;
+  const days = new Date(year, month + 1, 0).getDate();
+  const names = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+  elements.calendarGrid.innerHTML = names.map((name) => `<span class="calendar-weekday">${name}</span>`).join("");
+  for (let index = 0; index < offset; index += 1) elements.calendarGrid.insertAdjacentHTML("beforeend", "<span></span>");
+  for (let day = 1; day <= days; day += 1) {
+    const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const mark = state.calendar[date];
+    const outer = state.colors.find((color) => color.id === mark?.outer)?.value;
+    const inner = state.colors.find((color) => color.id === mark?.inner)?.value;
+    elements.calendarGrid.insertAdjacentHTML("beforeend", `<button class="calendar-day" type="button" data-date="${date}" style="--outer:${outer || "transparent"};--inner:${inner || "transparent"}">${day}</button>`);
+  }
+  elements.colorLegend.innerHTML = state.colors.filter((color) => color.id !== "none").map((color) => `<span><i style="background:${escapeHtml(color.value)}"></i>${escapeHtml(color.name)}</span>`).join("") || "<span>Noch keine Farben</span>";
+}
+
+function renderColorOptions() {
+  const options = state.colors.map((color) => `<option value="${escapeHtml(color.id)}">${escapeHtml(color.name)}</option>`).join("");
+  elements.outerColor.innerHTML = options;
+  elements.innerColor.innerHTML = options;
+}
+
 function activePlan() {
   return state.plans[0];
 }
@@ -126,6 +168,7 @@ function renderDayExercise(exerciseId) {
     const rowId = createId();
     exercise.rows = [{ id: rowId, weight: entries[0]?.weight || "", repetitions: entries[0]?.repetitions || "" }];
     if (entries[0] && !entries[0].rowId) entries[0].rowId = rowId;
+    saveState();
   }
   const expanded = expandedExercises.has(exerciseId);
   const latest = entries[0];
@@ -133,9 +176,9 @@ function renderDayExercise(exerciseId) {
     <div class="exercise-toggle">
       <button class="exercise-toggle-main" type="button" data-action="toggle-exercise" data-id="${escapeHtml(exerciseId)}" aria-expanded="${expanded}">
         <span class="exercise-toggle-name">${escapeHtml(exercise.name)}</span>
-        <span class="exercise-toggle-meta">${latest ? `${latest.weight.toLocaleString("de-DE")} kg · ${formatDate(latest.date)}` : "Noch kein Satz"} <span class="chevron">⌄</span></span>
+        <span class="exercise-toggle-meta"><canvas class="mini-chart" data-chart-exercise="${escapeHtml(exerciseId)}"></canvas><span class="chevron">⌄</span></span>
       </button>
-      <button class="icon-button delete exercise-remove" type="button" data-action="remove-day-exercise" data-id="${escapeHtml(exerciseId)}">Entfernen</button>
+      <button class="icon-button delete exercise-remove" type="button" data-action="remove-day-exercise" data-id="${escapeHtml(exerciseId)}" aria-label="Übung entfernen">−</button>
     </div>
     <div class="exercise-panel">
       <div class="set-rows" data-exercise-id="${escapeHtml(exerciseId)}">
@@ -167,14 +210,15 @@ function drawExerciseChart(canvas, exerciseId) {
     });
   const context = canvas.getContext("2d");
   const width = canvas.clientWidth || 600;
-  const height = 220;
+  const compact = canvas.classList.contains("mini-chart");
+  const height = compact ? 42 : 220;
   const ratio = window.devicePixelRatio || 1;
   canvas.width = width * ratio;
   canvas.height = height * ratio;
   context.scale(ratio, ratio);
   context.clearRect(0, 0, width, height);
   if (!points.length) return;
-  const padding = { top: 20, right: 18, bottom: 38, left: 44 };
+  const padding = compact ? { top: 5, right: 2, bottom: 5, left: 2 } : { top: 20, right: 18, bottom: 38, left: 44 };
   const max = Math.max(...points.flatMap((point) => [point.highest, point.second || point.highest]), 1);
   const min = Math.min(...points.flatMap((point) => [point.highest, point.second || point.highest]), 0);
   const range = Math.max(max - min, 1);
@@ -184,7 +228,7 @@ function drawExerciseChart(canvas, exerciseId) {
   context.lineWidth = 1;
   context.font = "11px system-ui";
   context.fillStyle = "#718078";
-  for (let index = 0; index < 3; index += 1) {
+  for (let index = 0; index < (compact ? 0 : 3); index += 1) {
     const value = min + (range * index) / 2;
     const position = y(value);
     context.beginPath();
@@ -212,21 +256,27 @@ function drawExerciseChart(canvas, exerciseId) {
     context.arc(x(index), y(point.highest), 4, 0, Math.PI * 2);
     context.fill();
   });
-  context.fillStyle = "#718078";
-  context.fillText(formatDate(points[0].date), padding.left, height - 12);
-  context.textAlign = "right";
-  context.fillText(formatDate(points[points.length - 1].date), width - padding.right, height - 12);
-  context.textAlign = "left";
+  if (!compact) {
+    context.fillStyle = "#718078";
+    context.fillText(formatDate(points[0].date), padding.left, height - 12);
+    context.textAlign = "right";
+    context.fillText(formatDate(points[points.length - 1].date), width - padding.right, height - 12);
+    context.textAlign = "left";
+  }
 }
 
 function renderHistory() {
   elements.totalSets.textContent = state.sets.length.toLocaleString("de-DE");
+  const volume = state.sets.reduce((sum, entry) => sum + (Number(entry.weight) || 0) * (Number(entry.repetitions) || 0), 0);
+  elements.totalVolume.textContent = volume.toLocaleString("de-DE");
 }
 
 function render() {
   renderExercises();
   renderPlans();
   renderHistory();
+  renderCalendar();
+  renderColorOptions();
 }
 
 function clearErrors() {
@@ -345,6 +395,36 @@ document.querySelector("#add-day-exercise-button").addEventListener("click", () 
   renderPlans();
   showMessage("Übung zum Trainingstag hinzugefügt.");
 });
+document.querySelector("#previous-month").addEventListener("click", () => { calendarCursor.setMonth(calendarCursor.getMonth() - 1); renderCalendar(); });
+document.querySelector("#next-month").addEventListener("click", () => { calendarCursor.setMonth(calendarCursor.getMonth() + 1); renderCalendar(); });
+document.querySelector("#add-color-button").addEventListener("click", () => elements.colorDialog.showModal());
+document.querySelector("#close-color-dialog").addEventListener("click", () => elements.colorDialog.close());
+document.querySelector("#cancel-color-dialog").addEventListener("click", () => elements.colorDialog.close());
+elements.colorForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  state.colors.push({ id: createId(), name: document.querySelector("#color-name").value.trim(), value: document.querySelector("#color-value").value });
+  saveState(); render(); elements.colorDialog.close();
+});
+document.querySelector("#close-date-dialog").addEventListener("click", () => elements.dateDialog.close());
+document.querySelector("#cancel-date-dialog").addEventListener("click", () => elements.dateDialog.close());
+elements.calendarGrid.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-date]");
+  if (!button) return;
+  selectedDate = button.dataset.date;
+  document.querySelector("#date-dialog-title").textContent = formatDate(selectedDate);
+  const mark = state.calendar[selectedDate] || {};
+  elements.outerColor.value = mark.outer || "none";
+  elements.innerColor.value = mark.inner || "none";
+  elements.dateDialog.showModal();
+});
+elements.dateForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const outer = elements.outerColor.value;
+  const inner = elements.innerColor.value;
+  if (outer === "none" && inner === "none") delete state.calendar[selectedDate];
+  else state.calendar[selectedDate] = { outer, inner };
+  saveState(); render(); elements.dateDialog.close();
+});
 
 document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-action]");
@@ -429,6 +509,7 @@ document.addEventListener("input", (event) => {
   }
   saveState();
   elements.totalSets.textContent = state.sets.length.toLocaleString("de-DE");
+  elements.totalVolume.textContent = state.sets.reduce((sum, entry) => sum + Number(entry.weight) * Number(entry.repetitions), 0).toLocaleString("de-DE");
   window.requestAnimationFrame(() => {
     document.querySelectorAll("[data-chart-exercise]").forEach((canvas) => drawExerciseChart(canvas, canvas.dataset.chartExercise));
   });
