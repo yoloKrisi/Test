@@ -18,15 +18,12 @@ const elements = {
   dayForm: document.querySelector("#day-form"),
   dayName: document.querySelector("#day-name"),
   dayNameError: document.querySelector("#day-name-error"),
-  calendarMonth: document.querySelector("#calendar-month"),
+  calendarMonth: document.querySelector("#calendar-title"),
   calendarGrid: document.querySelector("#calendar-grid"),
-  colorLegend: document.querySelector("#color-legend"),
+  symbolLegend: document.querySelector("#symbol-legend"),
   dateDialog: document.querySelector("#date-dialog"),
   dateForm: document.querySelector("#date-form"),
-  outerColor: document.querySelector("#outer-color"),
-  innerColor: document.querySelector("#inner-color"),
-  colorDialog: document.querySelector("#color-dialog"),
-  colorForm: document.querySelector("#color-form"),
+  symbolPicker: document.querySelector("#symbol-picker"),
 };
 
 let state = loadState();
@@ -36,6 +33,13 @@ let activeDayId = null;
 let calendarCursor = new Date();
 let selectedDate = null;
 const expandedExercises = new Set();
+const SYMBOLS = [
+  ["sauna", "♨"], ["laufen", "⌁"], ["restday", "○"], ["krankheit", "+"],
+  ["brust-rücken", "◈"], ["schultern-arme", "△"], ["beine", "╱"], ["beine-bauch", "◇"],
+  ["bauch", "⊙"], ["arme", "⌇"], ["brust", "□"], ["rücken", "▱"],
+  ["schultern", "⌃"], ["push", "↑"], ["pull", "↓"], ["full body", "✦"],
+  ["upper", "⌂"], ["lower", "⌄"],
+];
 
 function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -55,8 +59,10 @@ function loadState() {
       return {
         ...saved,
         plans: plans.length ? plans : [{ id: createId(), name: "Mein Training", days: [] }],
-        colors: Array.isArray(saved.colors) ? saved.colors : [{ id: "none", name: "Keine Farbe", value: "transparent" }],
-        calendar: saved.calendar || {},
+        calendar: Object.fromEntries(Object.entries(saved.calendar || {}).map(([date, value]) => [
+          date,
+          Array.isArray(value) ? value : [],
+        ])),
       };
     }
   } catch (error) {
@@ -66,7 +72,6 @@ function loadState() {
     exercises: DEFAULT_EXERCISES.map((name) => ({ id: createId(), name })),
     sets: [],
     plans: [{ id: createId(), name: "Mein Training", days: [] }],
-    colors: [{ id: "none", name: "Keine Farbe", value: "transparent" }],
     calendar: {},
   };
 }
@@ -119,18 +124,16 @@ function renderCalendar() {
   for (let index = 0; index < offset; index += 1) elements.calendarGrid.insertAdjacentHTML("beforeend", "<span></span>");
   for (let day = 1; day <= days; day += 1) {
     const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    const mark = state.calendar[date];
-    const outer = state.colors.find((color) => color.id === mark?.outer)?.value;
-    const inner = state.colors.find((color) => color.id === mark?.inner)?.value;
-    elements.calendarGrid.insertAdjacentHTML("beforeend", `<button class="calendar-day" type="button" data-date="${date}" style="--outer:${outer || "transparent"};--inner:${inner || "transparent"}">${day}</button>`);
+    const mark = state.calendar[date] || [];
+    const symbols = mark.map((name) => SYMBOLS.find(([label]) => label === name)?.[1]).filter(Boolean);
+    elements.calendarGrid.insertAdjacentHTML("beforeend", `<button class="calendar-day" type="button" data-date="${date}">${day}<span class="calendar-symbols">${symbols.map((symbol) => `<i>${symbol}</i>`).join("")}</span></button>`);
   }
-  elements.colorLegend.innerHTML = state.colors.filter((color) => color.id !== "none").map((color) => `<span><i style="background:${escapeHtml(color.value)}"></i>${escapeHtml(color.name)}</span>`).join("") || "<span>Noch keine Farben</span>";
+  elements.symbolLegend.innerHTML = SYMBOLS.map(([name, symbol]) => `<span><i>${symbol}</i>${name}</span>`).join("");
 }
 
-function renderColorOptions() {
-  const options = state.colors.map((color) => `<option value="${escapeHtml(color.id)}">${escapeHtml(color.name)}</option>`).join("");
-  elements.outerColor.innerHTML = options;
-  elements.innerColor.innerHTML = options;
+function renderSymbolPicker() {
+  const selected = selectedDate ? (state.calendar[selectedDate] || []) : [];
+  elements.symbolPicker.innerHTML = SYMBOLS.map(([name, symbol]) => `<button type="button" class="symbol-choice ${selected.includes(name) ? "selected" : ""}" data-symbol="${escapeHtml(name)}"><b>${symbol}</b><span>${name}</span></button>`).join("");
 }
 
 function activePlan() {
@@ -190,7 +193,7 @@ function renderDayExercise(exerciseId) {
         </div>`).join("")}
       </div>
       <button class="button button-quiet button-small add-set-button" type="button" data-action="add-row" data-exercise-id="${escapeHtml(exerciseId)}">+ Satz</button>
-      <p class="today-note">Sätze werden automatisch gespeichert · ${entries.length ? `${entries.length} historische Einträge` : "Noch kein Verlauf"}</p>
+      <label class="notes-label">Notizen<textarea class="exercise-notes" data-exercise-notes="${escapeHtml(exerciseId)}" maxlength="500" placeholder="Notiz zu dieser Übung...">${escapeHtml(exercise.notes || "")}</textarea></label>
       <div class="exercise-chart"><canvas data-chart-exercise="${escapeHtml(exerciseId)}" aria-label="Gewichtsverlauf ${escapeHtml(exercise.name)}"></canvas><p class="chart-empty">${entries.length ? "" : "Noch keine historischen Gewichte."}</p></div>
     </div>
   </article>`;
@@ -276,7 +279,7 @@ function render() {
   renderPlans();
   renderHistory();
   renderCalendar();
-  renderColorOptions();
+  renderSymbolPicker();
 }
 
 function clearErrors() {
@@ -397,14 +400,6 @@ document.querySelector("#add-day-exercise-button").addEventListener("click", () 
 });
 document.querySelector("#previous-month").addEventListener("click", () => { calendarCursor.setMonth(calendarCursor.getMonth() - 1); renderCalendar(); });
 document.querySelector("#next-month").addEventListener("click", () => { calendarCursor.setMonth(calendarCursor.getMonth() + 1); renderCalendar(); });
-document.querySelector("#add-color-button").addEventListener("click", () => elements.colorDialog.showModal());
-document.querySelector("#close-color-dialog").addEventListener("click", () => elements.colorDialog.close());
-document.querySelector("#cancel-color-dialog").addEventListener("click", () => elements.colorDialog.close());
-elements.colorForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  state.colors.push({ id: createId(), name: document.querySelector("#color-name").value.trim(), value: document.querySelector("#color-value").value });
-  saveState(); render(); elements.colorDialog.close();
-});
 document.querySelector("#close-date-dialog").addEventListener("click", () => elements.dateDialog.close());
 document.querySelector("#cancel-date-dialog").addEventListener("click", () => elements.dateDialog.close());
 elements.calendarGrid.addEventListener("click", (event) => {
@@ -412,18 +407,30 @@ elements.calendarGrid.addEventListener("click", (event) => {
   if (!button) return;
   selectedDate = button.dataset.date;
   document.querySelector("#date-dialog-title").textContent = formatDate(selectedDate);
-  const mark = state.calendar[selectedDate] || {};
-  elements.outerColor.value = mark.outer || "none";
-  elements.innerColor.value = mark.inner || "none";
+  renderSymbolPicker();
   elements.dateDialog.showModal();
 });
-elements.dateForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const outer = elements.outerColor.value;
-  const inner = elements.innerColor.value;
-  if (outer === "none" && inner === "none") delete state.calendar[selectedDate];
-  else state.calendar[selectedDate] = { outer, inner };
-  saveState(); render(); elements.dateDialog.close();
+elements.symbolPicker.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-symbol]");
+  if (!button || !selectedDate) return;
+  const current = state.calendar[selectedDate] || [];
+  const symbol = button.dataset.symbol;
+  if (current.includes(symbol)) state.calendar[selectedDate] = current.filter((item) => item !== symbol);
+  else if (current.length < 2) state.calendar[selectedDate] = [...current, symbol];
+  else state.calendar[selectedDate] = [current[1], symbol];
+  if (!state.calendar[selectedDate].length) delete state.calendar[selectedDate];
+  saveState();
+  renderCalendar();
+  renderSymbolPicker();
+});
+elements.dateForm.addEventListener("submit", (event) => { event.preventDefault(); elements.dateDialog.close(); });
+document.addEventListener("input", (event) => {
+  const textarea = event.target.closest("[data-exercise-notes]");
+  if (!textarea) return;
+  const exercise = state.exercises.find((item) => item.id === textarea.dataset.exerciseNotes);
+  if (!exercise) return;
+  exercise.notes = textarea.value;
+  saveState();
 });
 
 document.addEventListener("click", (event) => {

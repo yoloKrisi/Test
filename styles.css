@@ -33,16 +33,24 @@ button { cursor: pointer; }
 .set-counter strong { color: var(--green); font-size: 1rem; }
 .tracker-row { display: flex; justify-content: flex-end; gap: 22px; margin: 14px 2px 0; color: var(--muted); font-size: .82rem; }
 .tracker-row strong { color: var(--green); font-size: 1rem; }
-.calendar-panel { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+.calendar-card { margin-top: 20px; }
 .calendar-heading { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 12px; color: var(--green-dark); text-transform: capitalize; }
 .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
 .calendar-grid > span { min-height: 32px; }
 .calendar-weekday { color: var(--muted); font-size: .68rem; font-weight: 800; text-align: center; }
-.calendar-day { position: relative; min-height: 34px; color: var(--ink); border: 2px solid var(--outer, transparent); border-radius: 8px; background: var(--inner, transparent); font-size: .78rem; }
+.calendar-day { position: relative; min-height: 34px; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: .78rem; }
 .calendar-day:hover { background: var(--mint); }
-.color-legend { display: flex; flex-wrap: wrap; gap: 10px; margin: 13px 0 10px; color: var(--muted); font-size: .72rem; }
-.color-legend span { display: inline-flex; align-items: center; gap: 5px; }
-.color-legend i { width: 12px; height: 12px; border-radius: 4px; }
+.calendar-symbols { display: flex; justify-content: center; gap: 2px; color: var(--green); font-size: .7rem; }
+.calendar-symbols i { font-style: normal; }
+.symbol-legend { display: flex; flex-wrap: wrap; gap: 9px 13px; margin-top: 14px; color: var(--muted); font-size: .7rem; }
+.symbol-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.symbol-legend i { color: var(--green); font-size: .9rem; font-style: normal; }
+.symbol-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.symbol-choice { display: flex; align-items: center; gap: 7px; padding: 9px; color: var(--muted); border: 1px solid var(--line); border-radius: 9px; background: #fff; text-align: left; font-size: .72rem; }
+.symbol-choice b { color: var(--green); font-size: 1rem; font-weight: 500; }
+.symbol-choice.selected { color: var(--green-dark); border-color: var(--green); background: var(--mint); }
+.notes-label { display: block; margin-top: 14px; color: var(--muted); font-size: .75rem; }
+.exercise-notes { display: block; width: 100%; min-height: 62px; margin-top: 5px; resize: vertical; font-size: .78rem; }
 .hero { display: flex; align-items: end; justify-content: space-between; gap: 30px; margin-bottom: 38px; }
 .eyebrow, .section-label { margin: 0 0 10px; color: var(--green); text-transform: uppercase; letter-spacing: .14em; font-size: .7rem; font-weight: 800; }
 h1, h2, p { margin-top: 0; }
