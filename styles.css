@@ -40,14 +40,16 @@ button { cursor: pointer; }
 .calendar-weekday { color: var(--muted); font-size: .68rem; font-weight: 800; text-align: center; }
 .calendar-day { position: relative; min-height: 34px; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: .78rem; }
 .calendar-day:hover { background: var(--mint); }
-.calendar-symbols { display: flex; justify-content: center; gap: 2px; color: var(--green); font-size: .7rem; }
-.calendar-symbols i { font-style: normal; }
+.calendar-symbols { display: flex; justify-content: center; gap: 2px; min-height: 18px; }
+.person-symbol { display: block; width: 18px; height: 28px; }
+.person-symbol.large { width: 34px; height: 58px; }
+.symbol-legend .person-symbol { width: 15px; height: 24px; }
 .symbol-legend { display: flex; flex-wrap: wrap; gap: 9px 13px; margin-top: 14px; color: var(--muted); font-size: .7rem; }
 .symbol-legend span { display: inline-flex; align-items: center; gap: 4px; }
 .symbol-legend i { color: var(--green); font-size: .9rem; font-style: normal; }
 .symbol-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
 .symbol-choice { display: flex; align-items: center; gap: 7px; padding: 9px; color: var(--muted); border: 1px solid var(--line); border-radius: 9px; background: #fff; text-align: left; font-size: .72rem; }
-.symbol-choice b { color: var(--green); font-size: 1rem; font-weight: 500; }
+.symbol-choice b { display: block; font-weight: 500; line-height: 0; }
 .symbol-choice.selected { color: var(--green-dark); border-color: var(--green); background: var(--mint); }
 .notes-label { display: block; margin-top: 14px; color: var(--muted); font-size: .75rem; }
 .exercise-notes { display: block; width: 100%; min-height: 62px; margin-top: 5px; resize: vertical; font-size: .78rem; }

@@ -33,13 +33,32 @@ let activeDayId = null;
 let calendarCursor = new Date();
 let selectedDate = null;
 const expandedExercises = new Set();
-const SYMBOLS = [
-  ["sauna", "♨"], ["laufen", "⌁"], ["restday", "○"], ["krankheit", "+"],
-  ["brust-rücken", "◈"], ["schultern-arme", "△"], ["beine", "╱"], ["beine-bauch", "◇"],
-  ["bauch", "⊙"], ["arme", "⌇"], ["brust", "□"], ["rücken", "▱"],
-  ["schultern", "⌃"], ["push", "↑"], ["pull", "↓"], ["full body", "✦"],
-  ["upper", "⌂"], ["lower", "⌄"],
-];
+const SYMBOLS = ["sauna", "laufen", "restday", "krankheit", "brust-rücken", "schultern-arme", "beine", "beine-bauch", "bauch", "arme", "brust", "rücken", "schultern", "push", "pull", "full body", "upper", "lower"];
+
+function symbolMarkup(name, size = "small") {
+  const highlighted = {
+    "brust-rücken": "chest back", "schultern-arme": "shoulders arms", beine: "legs",
+    "beine-bauch": "legs abs", bauch: "abs", arme: "arms", brust: "chest",
+    rücken: "back", schultern: "shoulders", push: "chest shoulders arms",
+    pull: "back arms", "full body": "chest back shoulders arms abs legs",
+    upper: "chest back shoulders arms", lower: "abs legs",
+  }[name] || "";
+  const view = size === "large" ? "0 0 70 120" : "0 0 42 72";
+  const scale = size === "large" ? 1 : 0.6;
+  return `<svg class="person-symbol ${size}" viewBox="${view}" aria-hidden="true">
+    <g transform="translate(${size === "large" ? 0 : 8} ${size === "large" ? 0 : 5}) scale(${scale})">
+      <circle cx="35" cy="10" r="7" fill="#fff" stroke="#111" stroke-width="2"/>
+      <path d="M27 20 Q35 16 43 20 L47 48 Q35 54 23 48Z" fill="#fff" stroke="#111" stroke-width="2"/>
+      <path d="M27 21 L17 44 M43 21 L53 44 M30 49 L27 76 M40 49 L43 76" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+      ${highlighted.includes("chest") ? '<path d="M26 25 Q35 21 44 25 L43 34 Q35 37 27 34Z" fill="#111"/>' : ""}
+      ${highlighted.includes("back") ? '<path d="M27 25 Q35 21 43 25 L42 39 Q35 42 28 39Z" fill="#111"/>' : ""}
+      ${highlighted.includes("shoulders") ? '<path d="M24 22 Q27 18 30 22 L29 29 Q25 31 23 27Z M40 22 Q43 18 46 22 L47 27 Q45 31 41 29Z" fill="#111"/>' : ""}
+      ${highlighted.includes("arms") ? '<path d="M20 29 L16 43 Q18 47 21 43 L27 31Z M50 29 L54 43 Q52 47 49 43 L43 31Z" fill="#111"/>' : ""}
+      ${highlighted.includes("abs") ? '<path d="M29 34 L41 34 L41 46 Q35 49 29 46Z" fill="#111"/>' : ""}
+      ${highlighted.includes("legs") ? '<path d="M27 48 L35 50 L32 75 Q28 79 25 75Z M35 50 L43 48 L45 75 Q42 79 38 75Z" fill="#111"/>' : ""}
+    </g>
+  </svg>`;
+}
 
 function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -125,15 +144,14 @@ function renderCalendar() {
   for (let day = 1; day <= days; day += 1) {
     const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     const mark = state.calendar[date] || [];
-    const symbols = mark.map((name) => SYMBOLS.find(([label]) => label === name)?.[1]).filter(Boolean);
-    elements.calendarGrid.insertAdjacentHTML("beforeend", `<button class="calendar-day" type="button" data-date="${date}">${day}<span class="calendar-symbols">${symbols.map((symbol) => `<i>${symbol}</i>`).join("")}</span></button>`);
+    elements.calendarGrid.insertAdjacentHTML("beforeend", `<button class="calendar-day" type="button" data-date="${date}">${day}<span class="calendar-symbols">${mark.map((name) => symbolMarkup(name)).join("")}</span></button>`);
   }
-  elements.symbolLegend.innerHTML = SYMBOLS.map(([name, symbol]) => `<span><i>${symbol}</i>${name}</span>`).join("");
+  elements.symbolLegend.innerHTML = SYMBOLS.map((name) => `<span><i>${symbolMarkup(name)}</i>${name}</span>`).join("");
 }
 
 function renderSymbolPicker() {
   const selected = selectedDate ? (state.calendar[selectedDate] || []) : [];
-  elements.symbolPicker.innerHTML = SYMBOLS.map(([name, symbol]) => `<button type="button" class="symbol-choice ${selected.includes(name) ? "selected" : ""}" data-symbol="${escapeHtml(name)}"><b>${symbol}</b><span>${name}</span></button>`).join("");
+  elements.symbolPicker.innerHTML = SYMBOLS.map((name) => `<button type="button" class="symbol-choice ${selected.includes(name) ? "selected" : ""}" data-symbol="${escapeHtml(name)}"><b>${symbolMarkup(name, "large")}</b><span>${name}</span></button>`).join("");
 }
 
 function activePlan() {
