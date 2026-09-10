@@ -1,5 +1,4 @@
 const STORAGE_KEY = "gymlog-data-v1";
-const THEME_KEY = "gymlog-theme";
 const DEFAULT_EXERCISES = ["Bankdrücken", "Kniebeugen", "Kreuzheben"];
 
 const elements = {
@@ -36,14 +35,7 @@ let selectedDate = null;
 const expandedExercises = new Set();
 const SYMBOLS = ["sauna", "laufen", "restday", "krankheit"];
 
-function applyTheme(isDark) {
-  document.body.classList.toggle("dark-mode", isDark);
-  const button = document.querySelector("#theme-toggle");
-  button.textContent = isDark ? "Light Mode" : "Dark Mode";
-  button.setAttribute("aria-pressed", String(isDark));
-}
-
-applyTheme(localStorage.getItem(THEME_KEY) === "dark");
+document.body.classList.add("dark-mode");
 
 function trainingMarker(dayId) {
   return `training:${dayId}`;
@@ -609,11 +601,6 @@ document.addEventListener("dblclick", (event) => {
   showMessage("Trainingstag umbenannt.");
 });
 
-document.querySelector("#theme-toggle").addEventListener("click", () => {
-  const isDark = !document.body.classList.contains("dark-mode");
-  applyTheme(isDark);
-  localStorage.setItem(THEME_KEY, isDark ? "dark" : "light");
-});
 
 document.addEventListener("submit", (event) => {
   const form = event.target.closest(".inline-set-form");

@@ -36,6 +36,7 @@ button { cursor: pointer; }
 .tracker-row strong { color: var(--green); font-size: 1rem; }
 .calendar-card { margin-top: 20px; }
 .calendar-heading { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 12px; color: var(--green-dark); text-transform: capitalize; }
+body.dark-mode .calendar-heading { color: #aeb6b2; }
 .calendar-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(180px, .34fr); align-items: start; gap: 24px; }
 .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
 .calendar-grid > span { min-height: 32px; }
