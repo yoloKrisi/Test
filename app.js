@@ -180,10 +180,11 @@ function renderCalendar() {
     const trainingMark = mark.find(isTrainingMarker);
     const classes = mark.filter((name) => SYMBOLS.includes(name)).join(" ");
     const trainingClass = trainingMark ? " training-day" : "";
+    const stackedClass = trainingMark && mark.includes("laufen") ? " stacked-markers" : "";
     const markerHtml = mark.filter((name) => name !== "sauna").map((name) => isTrainingMarker(name)
       ? `<span class="training-day-label">${escapeHtml(markerLabel(name))}</span>`
       : symbolMarkup(name)).join("");
-    elements.calendarGrid.insertAdjacentHTML("beforeend", `<button class="calendar-day ${classes}${trainingClass}" type="button" data-date="${date}">${day}<span class="calendar-symbols">${markerHtml}</span></button>`);
+    elements.calendarGrid.insertAdjacentHTML("beforeend", `<button class="calendar-day ${classes}${trainingClass}" type="button" data-date="${date}">${day}<span class="calendar-symbols${stackedClass}">${markerHtml}</span></button>`);
   }
 }
 
