@@ -194,9 +194,9 @@ body.dark-mode .calendar-day.krankheit { color: #ffd7d7; background: #4b2529; bo
 body.dark-mode .calendar-day.laufen { background: #1d3658; border-color: #5796e8; }
 body.dark-mode .calendar-day.sauna::after { background: #f2a05f; }
 body.dark-mode .calendar-day.training-day,
-body.dark-mode .calendar-day.training-day.laufen { color: #f1f6f2; background: #5f9b76; border-color: #006400; }
+body.dark-mode .calendar-day.training-day.laufen { color: #f1f6f2; background: #213C2E; border-color: #006400; }
 body.dark-mode .calendar-day.training-day.sauna { border-color: #006400; }
-body.dark-mode .training-day-picker { color: #f1f6f2; border-color: #006400; background: #5f9b76; }
+body.dark-mode .training-day-picker { color: #f1f6f2; border-color: #006400; background: #213C2E; }
 body.dark-mode .symbol-legend { color: #aeb6b2; }
 body.dark-mode .symbol-legend .training-day-legend { color: #aeb6b2; }
 body.dark-mode .exercise-notes { color: var(--ink); border-color: #aeb6b2; background: #252a29; }
