@@ -172,7 +172,7 @@ body.dark-mode {
   --muted: #9aaba2;
   --line: #35483f;
   --paper: #3f4342;
-  --card: #18231e;
+  --card: #575c5a;
   --green: #6fcf97;
   --green-dark: #b4e8c9;
   --mint: #213c2e;
@@ -185,7 +185,7 @@ body.dark-mode input,
 body.dark-mode select,
 body.dark-mode .modal,
 body.dark-mode .symbol-choice { background: var(--card); }
-body.dark-mode .exercise-panel { background: #142019; }
+body.dark-mode .exercise-panel { background: #4b504e; }
 body.dark-mode .calendar-day.restday { color: #c0c7c3; background: #333b38; border-color: #737e79; }
 body.dark-mode .calendar-day.krankheit { background: #4b2529; }
 body.dark-mode .calendar-day.laufen { background: #1d3658; border-color: #5796e8; }
@@ -194,9 +194,9 @@ body.dark-mode .calendar-day.training-day.laufen { color: #07140c; background: #
 body.dark-mode .training-day-picker { color: #07140c; }
 body.dark-mode .exercise-row,
 body.dark-mode .history-row,
-body.dark-mode .exercise-history > div { background: #213028; }
+body.dark-mode .exercise-history > div { background: #656a68; }
 body.dark-mode .training-day-tab.active { background: var(--card); }
-body.dark-mode .button-quiet { color: var(--ink); background: #293a31; }
+body.dark-mode .button-quiet { color: var(--ink); background: #656a68; }
 body.dark-mode .calendar-day:hover { background: #294636; }
 
 @media (max-width: 700px) {
