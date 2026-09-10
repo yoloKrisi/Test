@@ -477,8 +477,8 @@ elements.symbolPicker.addEventListener("click", (event) => {
   else if (symbol === "restday" && current.includes("sauna")) state.calendar[selectedDate] = ["sauna", "restday"];
   else if (symbol === "restday") state.calendar[selectedDate] = ["restday"];
   else if (current.length === 1 && current[0] === "restday") state.calendar[selectedDate] = [symbol];
-  else if (current.length < 2) state.calendar[selectedDate] = [...current, symbol];
-  else state.calendar[selectedDate] = [current[1], symbol];
+  else if (current.length < 3) state.calendar[selectedDate] = [...current, symbol];
+  else state.calendar[selectedDate] = [current[1], current[2], symbol];
   if (!state.calendar[selectedDate].length || (state.calendar[selectedDate].length === 1 && state.calendar[selectedDate][0] === "restday")) delete state.calendar[selectedDate];
   saveState();
   renderCalendar();
