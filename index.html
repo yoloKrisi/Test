@@ -8,38 +8,10 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="site-header">
-      <div class="header-content">
-        <a class="brand" href="#" aria-label="GymLog Startseite">
-          <span class="brand-mark" aria-hidden="true">G</span>
-          <span>Gym<span class="brand-accent">Log</span></span>
-        </a>
-        <p class="header-date" id="today-label"></p>
-      </div>
-    </header>
-
     <main class="app-shell">
-      <section class="hero" id="overview" aria-labelledby="page-title">
-        <div>
-          <p class="eyebrow">Dein Fortschritt, dein Rhythmus</p>
-          <h1 id="page-title">Trainiere. Tracke.<br /><span>Werde stärker.</span></h1>
-          <p class="hero-copy">Halte Übungen, Sätze und Fortschritte an einem Ort fest.</p>
-        </div>
-        <div class="hero-stat" aria-label="Anzahl gespeicherter Trainingseinträge">
-          <strong id="total-sets">0</strong>
-          <span>gespeicherte Sätze</span>
-        </div>
-      </section>
-
       <div id="app-message" class="app-message" role="status" aria-live="polite"></div>
 
       <section class="card plans-card" id="plan-section" aria-labelledby="plans-title">
-        <div class="card-heading">
-          <div>
-            <p class="section-label">Dein Training</p>
-            <h2 id="plans-title">Trainingstag</h2>
-          </div>
-        </div>
         <div id="training-day-tabs" class="training-day-tabs" role="tablist" aria-label="Trainingstage"></div>
         <div id="training-days" class="training-days"></div>
         <p id="empty-plan" class="empty-state">Lege deinen ersten Trainingstag über das Plus an.</p>
@@ -52,6 +24,7 @@
           </div>
         </div>
       </section>
+      <div class="set-counter" aria-live="polite"><strong id="total-sets">0</strong> gespeicherte Sätze</div>
 
     </main>
 

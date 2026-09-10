@@ -3,7 +3,6 @@ const DEFAULT_EXERCISES = ["Bankdrücken", "Kniebeugen", "Kreuzheben"];
 
 const elements = {
   totalSets: document.querySelector("#total-sets"),
-  todayLabel: document.querySelector("#today-label"),
   message: document.querySelector("#app-message"),
   dialog: document.querySelector("#exercise-dialog"),
   dialogTitle: document.querySelector("#dialog-title"),
@@ -289,7 +288,6 @@ function closeDayDialog() {
   elements.dayDialog.close();
 }
 
-elements.todayLabel.textContent = new Intl.DateTimeFormat("de-DE", { dateStyle: "long" }).format(new Date());
 
 document.querySelector("#add-exercise-button").addEventListener("click", () => openExerciseDialog());
 document.querySelector("#close-dialog-button").addEventListener("click", closeExerciseDialog);
