@@ -17,7 +17,6 @@ const elements = {
   emptyPlan: document.querySelector("#empty-plan"),
   dayExerciseSelect: document.querySelector("#day-exercise-select"),
   deleteTrainingDayButton: document.querySelector("#delete-training-day-button"),
-  finishTrainingButton: document.querySelector("#finish-training-button"),
   dayDialog: document.querySelector("#day-dialog"),
   dayForm: document.querySelector("#day-form"),
   dayName: document.querySelector("#day-name"),
@@ -45,6 +44,7 @@ document.body.classList.add("dark-mode");
 function trainingMarker(dayId) {
   return `training:${dayId}`;
 }
+
 function isTrainingMarker(name) {
   return typeof name === "string" && name.startsWith("training:");
 }
@@ -223,7 +223,7 @@ function isWeightRecord(date) {
 
 function renderTrainingDayStats() {
   const days = activePlan()?.days || [];
-  const stats = days.map((day, index) => {
+  const stats = days.map((day) => {
     const exerciseIds = new Set(day.exerciseIds);
     const dates = Object.keys(state.calendar)
       .filter((date) => state.calendar[date].includes(trainingMarker(day.id)))
@@ -240,31 +240,11 @@ function renderTrainingDayStats() {
       ? Math.max(1, (Math.floor((lastDate - firstDate) / 86400000) + 1) / 7)
       : 1;
     const perWeek = count / weeks;
-    return { day, count, perWeek, percentage, color: ["#facc15", "#60a5fa", "#a78bfa", "#34d399", "#fb7185", "#f97316"][index % 6] };
-  });
-  const totalPerWeek = stats.reduce((sum, item) => sum + item.perWeek, 0);
-  let currentDegree = 0;
-  const segments = stats.map((item) => {
-    const start = currentDegree;
-    currentDegree += totalPerWeek ? (item.perWeek / totalPerWeek) * 360 : 0;
-    return `${item.color} ${start}deg ${currentDegree}deg`;
-  });
-  elements.trainingDayStats.innerHTML = stats.length ? `
-    <div class="training-day-ring-wrap">
-      <div class="training-day-ring" style="--ring-gradient: conic-gradient(${segments.join(", ")});">
-        <strong>${totalPerWeek.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</strong>
-        <span>Sätze/Woche</span>
-      </div>
-    </div>
-    <div class="training-day-stat-list">
-      ${stats.map(({ day, count, perWeek, color }) => {
-        const percentage = totalPerWeek ? Math.round((perWeek / totalPerWeek) * 100) : 0;
-        return `<div class="training-day-stat">
-          <span class="training-day-stat-color" style="--stat-color: ${color}"></span>
-          <div><strong class="training-day-stat-name">${escapeHtml(day.name)}</strong><span>${perWeek.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Sätze / Woche · ${percentage}%</span><span>${count} Sätze insgesamt</span></div>
-        </div>`;
-      }).join("")}
-    </div>` : "";
+    return `<div class="training-day-stat">
+      <div class="training-day-ring" style="--ring-value: ${percentage * 3.6}deg"><strong>${percentage}%</strong></div>
+      <div><strong class="training-day-stat-name">${escapeHtml(day.name)}</strong><span>${perWeek.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Sätze / Woche</span><span>${count} Sätze insgesamt</span></div>
+    </div>`;
+  }).join("") : "";
 }
 
 function renderCalendar() {
@@ -320,8 +300,6 @@ function renderPlans() {
   const day = activeDay();
   elements.deleteTrainingDayButton.disabled = !day;
   elements.deleteTrainingDayButton.dataset.id = day?.id || "";
-  elements.finishTrainingButton.disabled = !day;
-  elements.finishTrainingButton.dataset.id = day?.id || "";
   elements.trainingDays.innerHTML = day ? day.exerciseIds.map((exerciseId) => renderDayExercise(exerciseId)).join("") : "";
   elements.emptyPlan.hidden = Boolean(day);
   renderExercises();
@@ -701,9 +679,6 @@ document.addEventListener("click", (event) => {
       startExerciseTimer(exercise.id);
     }
   }
-  if (action === "finish-training") {
-    finishTraining(id);
-  }
   if (action === "edit") {
     const exercise = state.exercises.find((item) => item.id === id);
     if (exercise) openExerciseDialog(exercise);
@@ -797,50 +772,6 @@ function deleteTrainingDay(dayId) {
   saveState();
   render();
   showMessage("Trainingstag gelöscht.");
-}
-
-function finishTraining(dayId) {
-  const day = activePlan()?.days.find((item) => item.id === dayId);
-  if (!day) return;
-  const rows = day.exerciseIds.flatMap((exerciseId) => {
-    const exercise = state.exercises.find((item) => item.id === exerciseId);
-    return (exercise?.rows || []).map((row) => ({ exerciseId, row }));
-  });
-  const enteredRows = rows.filter(({ row }) => row.weight !== "" || row.repetitions !== "");
-  const invalid = enteredRows.find(({ row }) => {
-    const weight = Number(row.weight);
-    const repetitions = Number(row.repetitions);
-    return !Number.isFinite(weight) || weight < 0 || weight > 1000
-      || !Number.isInteger(repetitions) || repetitions < 1 || repetitions > 1000;
-  });
-  if (invalid) {
-    showMessage("Bitte alle eingegebenen Gewichte und Wiederholungen gültig ausfüllen.");
-    return;
-  }
-  if (!enteredRows.length) {
-    showMessage("Trage zuerst mindestens einen vollständigen Satz ein.");
-    return;
-  }
-  const date = today();
-  const current = (state.calendar[date] || []).filter((marker) => marker !== "restday");
-  if (!current.includes(trainingMarker(day.id)) && current.length >= 3) {
-    showMessage("Für diesen Tag sind bereits drei Kalenderaktivitäten gespeichert.");
-    return;
-  }
-  enteredRows.forEach(({ exerciseId, row }) => {
-    const existing = state.sets.find((entry) => entry.rowId === row.id);
-    const entry = existing || { id: createId(), rowId: row.id, exerciseId, createdAt: Date.now() };
-    Object.assign(entry, { exerciseId, weight: Number(row.weight), repetitions: Number(row.repetitions), date });
-    if (!existing) state.sets.push(entry);
-  });
-  if (!current.includes(trainingMarker(day.id))) {
-    current.push(trainingMarker(day.id));
-  }
-  state.calendar[date] = current;
-  day.exerciseIds.forEach((exerciseId) => stopExerciseTimer(exerciseId));
-  saveState();
-  render();
-  showMessage(`${day.name} beendet – ${enteredRows.length} Sätze gewertet.`);
 }
 
 document.addEventListener("dblclick", (event) => {
