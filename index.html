@@ -33,6 +33,34 @@
 
       <div id="app-message" class="app-message" role="status" aria-live="polite"></div>
 
+      <section class="card plans-card" aria-labelledby="plans-title">
+        <div class="card-heading">
+          <div>
+            <p class="section-label">Organisation</p>
+            <h2 id="plans-title">Trainingspläne</h2>
+          </div>
+          <button class="button button-small" id="add-plan-button" type="button">+ Neuer Plan</button>
+        </div>
+        <div class="plan-layout">
+          <div class="plan-sidebar">
+            <label for="plan-select">Aktiver Trainingsplan</label>
+            <select id="plan-select"></select>
+            <div id="plan-list" class="plan-list"></div>
+          </div>
+          <div class="plan-detail">
+            <div class="plan-detail-heading">
+              <div>
+                <p class="section-label">Wochenstruktur</p>
+                <h3 id="active-plan-name">Kein Plan ausgewählt</h3>
+              </div>
+              <button class="button button-quiet button-small" id="add-day-button" type="button">+ Trainingstag</button>
+            </div>
+            <div id="training-days" class="training-days"></div>
+            <p id="empty-plan" class="empty-state">Lege einen Plan und anschließend deine Trainingstage an.</p>
+          </div>
+        </div>
+      </section>
+
       <section class="dashboard-grid">
         <article class="card form-card">
           <div class="card-heading">
@@ -60,11 +88,7 @@
                 <p class="field-error" data-error-for="repetitions"></p>
               </div>
             </div>
-            <div class="field">
-              <label for="set-date">Datum</label>
-              <input id="set-date" name="date" type="date" required />
-              <p class="field-error" data-error-for="date"></p>
-            </div>
+            <p class="today-note">Der Satz wird automatisch mit dem heutigen Datum gespeichert.</p>
             <button class="button button-primary button-full" type="submit">Satz speichern <span aria-hidden="true">→</span></button>
           </form>
         </article>
@@ -93,6 +117,20 @@
         <div id="history-list" class="history-list"></div>
         <p id="empty-history" class="empty-state">Dein Trainingsverlauf ist noch leer. Der erste Satz wartet auf dich.</p>
       </section>
+
+      <section class="card chart-card" aria-labelledby="chart-title">
+        <div class="card-heading">
+          <div>
+            <p class="section-label">Fortschritt</p>
+            <h2 id="chart-title">Gewichtsentwicklung</h2>
+          </div>
+          <select id="chart-exercise-select" class="chart-select" aria-label="Übung für Diagramm auswählen"></select>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="progress-chart" aria-label="Diagramm der Gewichtsentwicklung"></canvas>
+          <p id="empty-chart" class="empty-state">Erfasse mehrere Sätze, um deine Entwicklung zu sehen.</p>
+        </div>
+      </section>
     </main>
 
     <dialog id="exercise-dialog" class="modal">
@@ -112,6 +150,48 @@
         <div class="modal-actions">
           <button class="button button-quiet" id="cancel-dialog-button" type="button">Abbrechen</button>
           <button class="button button-primary" type="submit">Speichern</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="plan-dialog" class="modal">
+      <form id="plan-form" method="dialog">
+        <div class="modal-heading">
+          <div>
+            <p class="section-label">Trainingsplan</p>
+            <h2>Plan erstellen</h2>
+          </div>
+          <button class="close-button" id="close-plan-dialog-button" type="button" aria-label="Dialog schließen">×</button>
+        </div>
+        <div class="field">
+          <label for="plan-name">Name des Plans</label>
+          <input id="plan-name" maxlength="60" required placeholder="z. B. Muskelaufbau" />
+          <p class="field-error" id="plan-name-error"></p>
+        </div>
+        <div class="modal-actions">
+          <button class="button button-quiet" id="cancel-plan-dialog-button" type="button">Abbrechen</button>
+          <button class="button button-primary" type="submit">Plan speichern</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="day-dialog" class="modal">
+      <form id="day-form" method="dialog">
+        <div class="modal-heading">
+          <div>
+            <p class="section-label">Trainingsplan</p>
+            <h2>Trainingstag hinzufügen</h2>
+          </div>
+          <button class="close-button" id="close-day-dialog-button" type="button" aria-label="Dialog schließen">×</button>
+        </div>
+        <div class="field">
+          <label for="day-name">Name des Trainingstags</label>
+          <input id="day-name" maxlength="50" required placeholder="z. B. Push oder Beine" />
+          <p class="field-error" id="day-name-error"></p>
+        </div>
+        <div class="modal-actions">
+          <button class="button button-quiet" id="cancel-day-dialog-button" type="button">Abbrechen</button>
+          <button class="button button-primary" type="submit">Tag speichern</button>
         </div>
       </form>
     </dialog>

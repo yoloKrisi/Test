@@ -10,17 +10,34 @@ const elements = {
   totalSets: document.querySelector("#total-sets"),
   todayLabel: document.querySelector("#today-label"),
   setForm: document.querySelector("#set-form"),
-  setDate: document.querySelector("#set-date"),
   message: document.querySelector("#app-message"),
   dialog: document.querySelector("#exercise-dialog"),
   dialogTitle: document.querySelector("#dialog-title"),
   exerciseForm: document.querySelector("#exercise-form"),
   exerciseName: document.querySelector("#exercise-name"),
   exerciseNameError: document.querySelector("#exercise-name-error"),
+  planSelect: document.querySelector("#plan-select"),
+  planList: document.querySelector("#plan-list"),
+  activePlanName: document.querySelector("#active-plan-name"),
+  trainingDays: document.querySelector("#training-days"),
+  emptyPlan: document.querySelector("#empty-plan"),
+  addDayButton: document.querySelector("#add-day-button"),
+  planDialog: document.querySelector("#plan-dialog"),
+  planForm: document.querySelector("#plan-form"),
+  planName: document.querySelector("#plan-name"),
+  planNameError: document.querySelector("#plan-name-error"),
+  dayDialog: document.querySelector("#day-dialog"),
+  dayForm: document.querySelector("#day-form"),
+  dayName: document.querySelector("#day-name"),
+  dayNameError: document.querySelector("#day-name-error"),
+  chartExerciseSelect: document.querySelector("#chart-exercise-select"),
+  chart: document.querySelector("#progress-chart"),
+  emptyChart: document.querySelector("#empty-chart"),
 };
 
 let state = loadState();
 let editingExerciseId = null;
+let activePlanId = null;
 
 function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -29,13 +46,16 @@ function createId() {
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (saved && Array.isArray(saved.exercises) && Array.isArray(saved.sets)) return saved;
+    if (saved && Array.isArray(saved.exercises) && Array.isArray(saved.sets)) {
+      return { ...saved, plans: Array.isArray(saved.plans) ? saved.plans : [] };
+    }
   } catch (error) {
     console.warn("Gespeicherte Trainingsdaten konnten nicht gelesen werden.", error);
   }
   return {
     exercises: DEFAULT_EXERCISES.map((name) => ({ id: createId(), name })),
     sets: [],
+    plans: [],
   };
 }
 
@@ -52,6 +72,12 @@ function escapeHtml(value) {
 function formatDate(dateString) {
   return new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "short", year: "numeric" })
     .format(new Date(`${dateString}T12:00:00`));
+}
+
+function today() {
+  const date = new Date();
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 10);
 }
 
 function showMessage(text) {
@@ -76,6 +102,103 @@ function renderExercises() {
     </div>
   `).join("");
   elements.emptyExercises.hidden = sorted.length > 0;
+  renderChartExerciseOptions(sorted);
+}
+
+function renderPlans() {
+  const plans = state.plans || [];
+  if (activePlanId && !plans.some((plan) => plan.id === activePlanId)) activePlanId = null;
+  if (!activePlanId && plans.length) activePlanId = plans[0].id;
+  elements.planSelect.innerHTML = plans.length
+    ? plans.map((plan) => `<option value="${escapeHtml(plan.id)}">${escapeHtml(plan.name)}</option>`).join("")
+    : '<option value="">Noch kein Trainingsplan</option>';
+  elements.planSelect.disabled = !plans.length;
+  if (activePlanId) elements.planSelect.value = activePlanId;
+  elements.planList.innerHTML = plans.map((plan) => `
+    <div class="plan-row ${plan.id === activePlanId ? "active" : ""}">
+      <span>${escapeHtml(plan.name)}</span>
+      <button class="icon-button delete" type="button" data-action="delete-plan" data-id="${escapeHtml(plan.id)}">Löschen</button>
+    </div>
+  `).join("");
+  const activePlan = plans.find((plan) => plan.id === activePlanId);
+  elements.activePlanName.textContent = activePlan?.name || "Kein Plan ausgewählt";
+  elements.addDayButton.disabled = !activePlan;
+  elements.trainingDays.innerHTML = activePlan?.days.map((day) => `
+    <div class="training-day">
+      <div class="training-day-heading">
+        <strong>${escapeHtml(day.name)}</strong>
+        <button class="icon-button delete" type="button" data-action="delete-day" data-id="${escapeHtml(day.id)}">Löschen</button>
+      </div>
+      <div class="day-exercises">
+        ${day.exerciseIds.length
+          ? day.exerciseIds.map((id) => state.exercises.find((exercise) => exercise.id === id)?.name)
+            .filter(Boolean).map((name) => `<span>${escapeHtml(name)}</span>`).join("")
+          : '<span class="day-empty">Noch keine Übungen zugeordnet</span>'}
+      </div>
+    </div>
+  `).join("") || "";
+  elements.emptyPlan.hidden = Boolean(activePlan?.days.length);
+}
+
+function renderChartExerciseOptions(sortedExercises) {
+  const previous = elements.chartExerciseSelect.value;
+  elements.chartExerciseSelect.innerHTML = sortedExercises.length
+    ? sortedExercises.map((exercise) => `<option value="${escapeHtml(exercise.id)}">${escapeHtml(exercise.name)}</option>`).join("")
+    : '<option value="">Keine Übungen</option>';
+  if (sortedExercises.some((exercise) => exercise.id === previous)) elements.chartExerciseSelect.value = previous;
+  elements.chartExerciseSelect.disabled = !sortedExercises.length;
+  drawChart();
+}
+
+function drawChart() {
+  const canvas = elements.chart;
+  const entries = state.sets.filter((entry) => entry.exerciseId === elements.chartExerciseSelect.value)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
+  const context = canvas.getContext("2d");
+  const width = canvas.clientWidth || 600;
+  const height = 260;
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = width * ratio;
+  canvas.height = height * ratio;
+  context.scale(ratio, ratio);
+  context.clearRect(0, 0, width, height);
+  elements.emptyChart.hidden = entries.length > 1;
+  if (entries.length < 2) return;
+  const padding = { top: 20, right: 18, bottom: 38, left: 44 };
+  const max = Math.max(...entries.map((entry) => entry.weight), 1);
+  const min = Math.min(...entries.map((entry) => entry.weight), 0);
+  const range = Math.max(max - min, 1);
+  const x = (index) => padding.left + (index / (entries.length - 1)) * (width - padding.left - padding.right);
+  const y = (weight) => padding.top + (1 - (weight - min) / range) * (height - padding.top - padding.bottom);
+  context.strokeStyle = "#dce5df";
+  context.lineWidth = 1;
+  context.font = "11px system-ui";
+  context.fillStyle = "#718078";
+  for (let index = 0; index < 3; index += 1) {
+    const value = min + (range * index) / 2;
+    const position = y(value);
+    context.beginPath();
+    context.moveTo(padding.left, position);
+    context.lineTo(width - padding.right, position);
+    context.stroke();
+    context.fillText(`${value.toLocaleString("de-DE", { maximumFractionDigits: 1 })} kg`, 4, position + 4);
+  }
+  context.strokeStyle = "#246b4a";
+  context.lineWidth = 3;
+  context.beginPath();
+  entries.forEach((entry, index) => index ? context.lineTo(x(index), y(entry.weight)) : context.moveTo(x(index), y(entry.weight)));
+  context.stroke();
+  entries.forEach((entry, index) => {
+    context.fillStyle = "#e58b51";
+    context.beginPath();
+    context.arc(x(index), y(entry.weight), 5, 0, Math.PI * 2);
+    context.fill();
+  });
+  context.fillStyle = "#718078";
+  context.fillText(formatDate(entries[0].date), padding.left, height - 12);
+  context.textAlign = "right";
+  context.fillText(formatDate(entries[entries.length - 1].date), width - padding.right, height - 12);
+  context.textAlign = "left";
 }
 
 function renderHistory() {
@@ -96,6 +219,7 @@ function renderHistory() {
 
 function render() {
   renderExercises();
+  renderPlans();
   renderHistory();
 }
 
@@ -109,13 +233,12 @@ function validateSet() {
     exercise: elements.exerciseSelect.value,
     weight: Number(document.querySelector("#weight").value),
     repetitions: Number(document.querySelector("#repetitions").value),
-    date: elements.setDate.value,
+    date: today(),
   };
   const errors = {};
   if (!values.exercise) errors.exercise = "Bitte wähle eine Übung.";
   if (!Number.isFinite(values.weight) || values.weight < 0 || values.weight > 1000) errors.weight = "Gib 0 bis 1.000 kg ein.";
   if (!Number.isInteger(values.repetitions) || values.repetitions < 1 || values.repetitions > 1000) errors.repetitions = "Gib 1 bis 1.000 Wiederholungen ein.";
-  if (!values.date || values.date > new Date().toISOString().slice(0, 10)) errors.date = "Das Datum darf nicht in der Zukunft liegen.";
   Object.entries(errors).forEach(([key, message]) => {
     const errorElement = document.querySelector(`[data-error-for="${key}"]`);
     if (errorElement) errorElement.textContent = message;
@@ -137,7 +260,28 @@ function closeExerciseDialog() {
   editingExerciseId = null;
 }
 
-elements.setDate.value = new Date().toISOString().slice(0, 10);
+function openPlanDialog() {
+  elements.planName.value = "";
+  elements.planNameError.textContent = "";
+  elements.planDialog.showModal();
+  elements.planName.focus();
+}
+
+function closePlanDialog() {
+  elements.planDialog.close();
+}
+
+function openDayDialog() {
+  elements.dayName.value = "";
+  elements.dayNameError.textContent = "";
+  elements.dayDialog.showModal();
+  elements.dayName.focus();
+}
+
+function closeDayDialog() {
+  elements.dayDialog.close();
+}
+
 elements.todayLabel.textContent = new Intl.DateTimeFormat("de-DE", { dateStyle: "long" }).format(new Date());
 elements.setForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -146,7 +290,6 @@ elements.setForm.addEventListener("submit", (event) => {
   state.sets.push({ id: createId(), ...values, createdAt: Date.now() });
   saveState();
   elements.setForm.reset();
-  elements.setDate.value = new Date().toISOString().slice(0, 10);
   render();
   showMessage("Satz gespeichert – stark gemacht!");
 });
@@ -177,6 +320,52 @@ elements.exerciseForm.addEventListener("submit", (event) => {
   closeExerciseDialog();
 });
 
+document.querySelector("#add-plan-button").addEventListener("click", openPlanDialog);
+document.querySelector("#close-plan-dialog-button").addEventListener("click", closePlanDialog);
+document.querySelector("#cancel-plan-dialog-button").addEventListener("click", closePlanDialog);
+elements.planForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = elements.planName.value.trim().replace(/\s+/g, " ");
+  const duplicate = state.plans.some((plan) => plan.name.toLocaleLowerCase() === name.toLocaleLowerCase());
+  if (name.length < 2 || duplicate) {
+    elements.planNameError.textContent = duplicate ? "Diesen Plan gibt es bereits." : "Bitte gib mindestens 2 Zeichen ein.";
+    return;
+  }
+  const plan = { id: createId(), name, days: [] };
+  state.plans.push(plan);
+  activePlanId = plan.id;
+  saveState();
+  render();
+  closePlanDialog();
+  showMessage("Trainingsplan erstellt.");
+});
+
+document.querySelector("#add-day-button").addEventListener("click", openDayDialog);
+document.querySelector("#close-day-dialog-button").addEventListener("click", closeDayDialog);
+document.querySelector("#cancel-day-dialog-button").addEventListener("click", closeDayDialog);
+elements.dayForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = elements.dayName.value.trim().replace(/\s+/g, " ");
+  const plan = state.plans.find((item) => item.id === activePlanId);
+  if (!plan) return;
+  if (name.length < 2 || plan.days.some((day) => day.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+    elements.dayNameError.textContent = "Bitte einen eindeutigen Namen mit mindestens 2 Zeichen eingeben.";
+    return;
+  }
+  plan.days.push({ id: createId(), name, exerciseIds: [] });
+  saveState();
+  render();
+  closeDayDialog();
+  showMessage("Trainingstag hinzugefügt.");
+});
+
+elements.planSelect.addEventListener("change", () => {
+  activePlanId = elements.planSelect.value || null;
+  renderPlans();
+});
+elements.chartExerciseSelect.addEventListener("change", drawChart);
+window.addEventListener("resize", drawChart);
+
 document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-action]");
   if (!button) return;
@@ -198,6 +387,23 @@ document.addEventListener("click", (event) => {
     saveState();
     render();
     showMessage("Satz aus dem Verlauf entfernt.");
+  }
+  if (action === "delete-plan") {
+    const plan = state.plans.find((item) => item.id === id);
+    if (!plan || !window.confirm(`"${plan.name}" wirklich löschen?`)) return;
+    state.plans = state.plans.filter((item) => item.id !== id);
+    activePlanId = state.plans[0]?.id || null;
+    saveState();
+    render();
+    showMessage("Trainingsplan gelöscht.");
+  }
+  if (action === "delete-day") {
+    const plan = state.plans.find((item) => item.id === activePlanId);
+    if (!plan || !window.confirm("Diesen Trainingstag wirklich löschen?")) return;
+    plan.days = plan.days.filter((day) => day.id !== id);
+    saveState();
+    render();
+    showMessage("Trainingstag gelöscht.");
   }
 });
 

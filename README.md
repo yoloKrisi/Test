@@ -11,3 +11,5 @@ npm run check
 ```
 
 Die Übungen und Trainingssätze werden automatisch im `localStorage` des Browsers gespeichert und bleiben beim Neuladen erhalten.
+
+Trainingspläne können mehrere Trainingstage enthalten. Das Gewichtdiagramm zeigt die Entwicklung pro Übung; neue Sätze verwenden automatisch das aktuelle Datum.
