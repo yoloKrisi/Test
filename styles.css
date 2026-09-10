@@ -34,6 +34,8 @@ button { cursor: pointer; }
 .set-counter strong { color: var(--green); font-size: 1rem; }
 .tracker-row { display: flex; justify-content: flex-end; gap: 22px; margin: 14px 2px 0; color: var(--muted); font-size: .82rem; }
 .tracker-row strong { color: var(--green); font-size: 1rem; }
+.frequency-stats { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px 18px; margin: 10px 2px 0; color: var(--muted); font-size: .78rem; }
+.frequency-stat strong { color: var(--green); font-size: .95rem; }
 .calendar-card { margin-top: 20px; }
 .calendar-heading { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 12px; color: var(--green-dark); text-transform: capitalize; }
 body.dark-mode .calendar-heading { color: #aeb6b2; }

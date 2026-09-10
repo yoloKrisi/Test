@@ -4,6 +4,7 @@ const DEFAULT_EXERCISES = ["Bankdrücken", "Kniebeugen", "Kreuzheben"];
 const elements = {
   totalSets: document.querySelector("#total-sets"),
   totalVolume: document.querySelector("#total-volume"),
+  frequencyStats: document.querySelector("#frequency-stats"),
   message: document.querySelector("#app-message"),
   dialog: document.querySelector("#exercise-dialog"),
   dialogTitle: document.querySelector("#dialog-title"),
@@ -330,6 +331,24 @@ function renderHistory() {
   elements.totalSets.textContent = state.sets.length.toLocaleString("de-DE");
   const volume = state.sets.reduce((sum, entry) => sum + (Number(entry.weight) || 0) * (Number(entry.repetitions) || 0), 0);
   elements.totalVolume.textContent = volume.toLocaleString("de-DE");
+  const dates = Object.keys(state.calendar).filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date)).sort();
+  if (!dates.length) {
+    elements.frequencyStats.innerHTML = "";
+    return;
+  }
+  const firstDate = new Date(`${dates[0]}T12:00:00`);
+  const lastDate = new Date(`${dates[dates.length - 1]}T12:00:00`);
+  const weeks = Math.max(1, (lastDate - firstDate) / 86400000 / 7);
+  const countDates = (predicate) => new Set(dates.filter((date) => predicate(state.calendar[date] || []))).size;
+  const trainingCount = countDates((markers) => markers.some(isTrainingMarker));
+  const runningCount = countDates((markers) => markers.includes("laufen"));
+  const saunaCount = countDates((markers) => markers.includes("sauna"));
+  const stat = (label, count, className) => `<span class="frequency-stat ${className}"><strong>${(count / weeks).toLocaleString("de-DE", { maximumFractionDigits: 2 })}</strong> ${label} / Woche</span>`;
+  elements.frequencyStats.innerHTML = [
+    trainingCount ? stat("Training", trainingCount, "training-frequency") : "",
+    runningCount ? stat("Laufen", runningCount, "running-frequency") : "",
+    saunaCount ? stat("Sauna", saunaCount, "sauna-frequency") : "",
+  ].filter(Boolean).join("");
 }
 
 function render() {
