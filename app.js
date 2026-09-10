@@ -5,6 +5,7 @@ const elements = {
   totalSets: document.querySelector("#total-sets"),
   totalVolume: document.querySelector("#total-volume"),
   frequencyStats: document.querySelector("#frequency-stats"),
+  trainingDayStats: document.querySelector("#training-day-stats"),
   message: document.querySelector("#app-message"),
   dialog: document.querySelector("#exercise-dialog"),
   dialogTitle: document.querySelector("#dialog-title"),
@@ -216,8 +217,34 @@ function isWeightRecord(date) {
       .filter((candidate) => candidate.exerciseId === entry.exerciseId && candidate.date < date)
       .map((candidate) => Number(candidate.weight))
       .filter((candidate) => Number.isFinite(candidate));
-    return !previousWeights.length || weight > Math.max(...previousWeights);
+    return previousWeights.length > 0 && weight > Math.max(...previousWeights);
   });
+}
+
+function renderTrainingDayStats() {
+  const days = activePlan()?.days || [];
+  const stats = days.map((day) => {
+    const exerciseIds = new Set(day.exerciseIds);
+    const dates = Object.keys(state.calendar)
+      .filter((date) => state.calendar[date].includes(trainingMarker(day.id)))
+      .sort();
+    const sets = state.sets.filter((entry) => dates.includes(entry.date) && exerciseIds.has(entry.exerciseId));
+    return { day, count: sets.length, dates };
+  });
+  const totalSets = stats.reduce((sum, item) => sum + item.count, 0);
+  elements.trainingDayStats.innerHTML = stats.length ? stats.map(({ day, count, dates }) => {
+    const percentage = totalSets ? Math.round((count / totalSets) * 100) : 0;
+    const firstDate = dates[0] ? new Date(`${dates[0]}T12:00:00`) : null;
+    const lastDate = dates.length ? new Date(`${dates[dates.length - 1]}T12:00:00`) : null;
+    const weeks = firstDate && lastDate
+      ? Math.max(1, (Math.floor((lastDate - firstDate) / 86400000) + 1) / 7)
+      : 1;
+    const perWeek = count / weeks;
+    return `<div class="training-day-stat">
+      <div class="training-day-ring" style="--ring-value: ${percentage * 3.6}deg"><strong>${percentage}%</strong></div>
+      <div><strong class="training-day-stat-name">${escapeHtml(day.name)}</strong><span>${perWeek.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Sätze / Woche</span><span>${count} Sätze insgesamt</span></div>
+    </div>`;
+  }).join("") : "";
 }
 
 function renderCalendar() {
@@ -399,6 +426,7 @@ function renderHistory() {
   elements.totalSets.textContent = state.sets.length.toLocaleString("de-DE");
   const volume = state.sets.reduce((sum, entry) => sum + (Number(entry.weight) || 0) * (Number(entry.repetitions) || 0), 0);
   elements.totalVolume.textContent = volume.toLocaleString("de-DE");
+  renderTrainingDayStats();
   const dates = Object.keys(state.calendar).filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date)).sort();
   if (!dates.length) {
     elements.frequencyStats.innerHTML = "";

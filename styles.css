@@ -36,6 +36,13 @@ button { cursor: pointer; }
 .tracker-row strong { color: var(--green); font-size: 1rem; }
 .frequency-stats { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px 18px; margin: 10px 2px 0; color: var(--muted); font-size: .78rem; }
 .frequency-stat strong { color: var(--green); font-size: .95rem; }
+.training-day-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+.training-day-stat { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: .72rem; }
+.training-day-stat > div:last-child { display: grid; gap: 3px; }
+.training-day-stat-name { color: var(--ink); font-size: .82rem; }
+.training-day-ring { display: grid; flex: 0 0 64px; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: conic-gradient(#facc15 var(--ring-value), #353535 0); }
+.training-day-ring::before { grid-area: 1 / 1; width: 48px; height: 48px; border-radius: 50%; background: #1f1f1f; content: ""; }
+.training-day-ring strong { z-index: 1; grid-area: 1 / 1; color: #facc15; font-size: .8rem; }
 .calendar-card { margin-top: 20px; }
 .calendar-heading { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 12px; color: var(--green-dark); text-transform: capitalize; }
 body.dark-mode .calendar-heading { color: #aeb6b2; }
