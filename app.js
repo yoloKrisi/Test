@@ -35,6 +35,7 @@ let activeDayId = null;
 let calendarCursor = new Date();
 let selectedDate = null;
 const expandedExercises = new Set();
+const exerciseTimers = new Map();
 const SYMBOLS = ["sauna", "laufen", "restday", "krankheit"];
 
 document.body.classList.add("dark-mode");
@@ -156,6 +157,47 @@ function showMessage(text) {
   showMessage.timeout = window.setTimeout(() => { elements.message.textContent = ""; }, 3200);
 }
 
+function formatTimer(seconds) {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+function updateExerciseTimer(exerciseId) {
+  const timer = exerciseTimers.get(exerciseId);
+  const exercise = state.exercises.find((item) => item.id === exerciseId);
+  const display = document.querySelector(`[data-timer-display="${CSS.escape(exerciseId)}"]`);
+  if (display && exercise) {
+    display.textContent = formatTimer(timer?.remaining ?? exercise.restSeconds ?? 150);
+    display.classList.toggle("timer-running", Boolean(timer?.interval));
+    display.setAttribute("aria-label", timer?.interval ? "Timer pausieren" : "Timer starten");
+  }
+}
+
+function startExerciseTimer(exerciseId) {
+  const exercise = state.exercises.find((item) => item.id === exerciseId);
+  if (!exercise) return;
+  const current = exerciseTimers.get(exerciseId);
+  if (current?.interval) window.clearInterval(current.interval);
+  const timer = { remaining: exercise.restSeconds || 150, interval: null };
+  timer.interval = window.setInterval(() => {
+    timer.remaining -= 1;
+    if (timer.remaining <= 0) {
+      timer.remaining = 0;
+      window.clearInterval(timer.interval);
+      timer.interval = null;
+      showMessage("Pausenzeit beendet.");
+    }
+    updateExerciseTimer(exerciseId);
+  }, 1000);
+  exerciseTimers.set(exerciseId, timer);
+  updateExerciseTimer(exerciseId);
+}
+
+function stopExerciseTimer(exerciseId) {
+  const timer = exerciseTimers.get(exerciseId);
+  if (timer?.interval) window.clearInterval(timer.interval);
+  exerciseTimers.delete(exerciseId);
+}
+
 function renderExercises() {
   const available = state.exercises.filter((exercise) => !activeDay()?.exerciseIds.includes(exercise.id));
   elements.dayExerciseSelect.innerHTML = available.length
@@ -237,6 +279,8 @@ function renderDayExercise(exerciseId) {
   }
   const expanded = expandedExercises.has(exerciseId);
   const latest = entries[0];
+  const configuredRest = Math.max(15, Math.min(600, Number(exercise.restSeconds) || 150));
+  exercise.restSeconds = configuredRest;
   return `<article class="day-exercise-card ${expanded ? "expanded" : ""}">
     <div class="exercise-toggle">
       <button class="exercise-toggle-main" type="button" data-action="toggle-exercise" data-id="${escapeHtml(exerciseId)}" aria-expanded="${expanded}">
@@ -254,7 +298,14 @@ function renderDayExercise(exerciseId) {
           <button class="icon-button" type="button" data-action="remove-row" data-exercise-id="${escapeHtml(exerciseId)}" data-row-id="${escapeHtml(row.id)}" aria-label="Satz entfernen">−</button>
         </div>`).join("")}
       </div>
-      <button class="button button-quiet button-small add-set-button" type="button" data-action="add-row" data-exercise-id="${escapeHtml(exerciseId)}">+ Satz</button>
+      <div class="set-actions">
+        <button class="button button-quiet button-small add-set-button" type="button" data-action="add-row" data-exercise-id="${escapeHtml(exerciseId)}">+ Satz</button>
+        <div class="rest-timer" data-exercise-timer="${escapeHtml(exerciseId)}">
+          <button class="timer-adjust" type="button" data-action="timer-minus" data-exercise-id="${escapeHtml(exerciseId)}" aria-label="15 Sekunden abziehen">−15 Sek.</button>
+          <button class="timer-display" type="button" data-action="timer-toggle" data-exercise-id="${escapeHtml(exerciseId)}" data-timer-display="${escapeHtml(exerciseId)}" aria-label="Timer starten">${formatTimer(exerciseTimers.get(exerciseId)?.remaining ?? configuredRest)}</button>
+          <button class="timer-adjust" type="button" data-action="timer-plus" data-exercise-id="${escapeHtml(exerciseId)}" aria-label="15 Sekunden hinzufügen">+15 Sek.</button>
+        </div>
+      </div>
       <label class="notes-label">Notizen<textarea class="exercise-notes" data-exercise-notes="${escapeHtml(exerciseId)}" maxlength="500" placeholder="Notiz zu dieser Übung...">${escapeHtml(exercise.notes || "")}</textarea></label>
       <div class="exercise-chart"><canvas data-chart-exercise="${escapeHtml(exerciseId)}" aria-label="Gewichtsverlauf ${escapeHtml(exercise.name)}"></canvas><p class="chart-empty">${entries.length ? "" : "Noch keine historischen Gewichte."}</p></div>
     </div>
@@ -551,13 +602,40 @@ document.addEventListener("click", (event) => {
     const exercise = state.exercises.find((item) => item.id === button.dataset.exerciseId);
     if (!exercise) return;
     exercise.rows = Array.isArray(exercise.rows) ? exercise.rows : [];
-    if (action === "add-row") exercise.rows.push({ id: createId(), weight: "", repetitions: "" });
+    if (action === "add-row") {
+      exercise.rows.push({ id: createId(), weight: "", repetitions: "" });
+      saveState();
+      renderPlans();
+      startExerciseTimer(button.dataset.exerciseId);
+      return;
+    }
     if (action === "remove-row" && exercise.rows.length > 1) {
       exercise.rows = exercise.rows.filter((row) => row.id !== button.dataset.rowId);
       state.sets = state.sets.filter((entry) => entry.rowId !== button.dataset.rowId);
     }
     saveState();
     renderPlans();
+  }
+  if (action === "timer-minus" || action === "timer-plus") {
+    const exercise = state.exercises.find((item) => item.id === button.dataset.exerciseId);
+    if (!exercise) return;
+    exercise.restSeconds = Math.max(15, Math.min(600, (Number(exercise.restSeconds) || 150) + (action === "timer-plus" ? 15 : -15)));
+    saveState();
+    const timer = exerciseTimers.get(exercise.id);
+    if (timer && !timer.interval) timer.remaining = exercise.restSeconds;
+    updateExerciseTimer(exercise.id);
+  }
+  if (action === "timer-toggle") {
+    const exercise = state.exercises.find((item) => item.id === button.dataset.exerciseId);
+    if (!exercise) return;
+    const timer = exerciseTimers.get(exercise.id);
+    if (timer?.interval) {
+      window.clearInterval(timer.interval);
+      timer.interval = null;
+      updateExerciseTimer(exercise.id);
+    } else {
+      startExerciseTimer(exercise.id);
+    }
   }
   if (action === "edit") {
     const exercise = state.exercises.find((item) => item.id === id);
