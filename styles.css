@@ -193,7 +193,7 @@ body.dark-mode .card,
 body.dark-mode .day-exercise-card,
 body.dark-mode .calendar-card { border-color: transparent; }
 body.dark-mode .calendar-day:not(.restday):not(.training-day):not(.laufen):not(.krankheit) { border-color: transparent; }
-body.dark-mode .calendar-day.restday { color: #e5ece8; background: #273338; border-color: transparent; }
+body.dark-mode .calendar-day.restday { color: #e5ece8; background: #363636; border-color: transparent; }
 body.dark-mode .calendar-day.krankheit { color: #ffd7d7; background: #343b3f; border-color: #c65f6c; }
 body.dark-mode .calendar-day.laufen { background: #343b3f; border-color: #5796e8; }
 body.dark-mode .calendar-day.sauna::after { background: #f2a05f; }
