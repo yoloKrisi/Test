@@ -4,8 +4,6 @@ const DEFAULT_EXERCISES = ["Bankdrücken", "Kniebeugen", "Kreuzheben"];
 const elements = {
   exerciseList: document.querySelector("#exercise-list"),
   emptyExercises: document.querySelector("#empty-exercises"),
-  historyList: document.querySelector("#history-list"),
-  emptyHistory: document.querySelector("#empty-history"),
   totalSets: document.querySelector("#total-sets"),
   todayLabel: document.querySelector("#today-label"),
   message: document.querySelector("#app-message"),
@@ -220,18 +218,6 @@ function drawChart() {
 }
 
 function renderHistory() {
-  const sorted = [...state.sets].sort((a, b) => `${b.date}${b.createdAt}`.localeCompare(`${a.date}${a.createdAt}`));
-  elements.historyList.innerHTML = sorted.map((entry) => {
-    const exercise = state.exercises.find((item) => item.id === entry.exerciseId);
-    return `
-      <div class="history-row">
-        <div><div class="history-exercise">${escapeHtml(exercise?.name || "Gelöschte Übung")}</div><div class="history-date">${formatDate(entry.date)}</div></div>
-        <div class="history-value">${entry.weight.toLocaleString("de-DE")} <span>kg</span></div>
-        <div class="history-value">${entry.repetitions} <span>Wdh.</span></div>
-        <button class="icon-button delete" type="button" data-action="delete-set" data-id="${escapeHtml(entry.id)}" aria-label="Satz löschen">Löschen</button>
-      </div>`;
-  }).join("");
-  elements.emptyHistory.hidden = sorted.length > 0;
   elements.totalSets.textContent = state.sets.length.toLocaleString("de-DE");
 }
 
@@ -391,12 +377,6 @@ document.addEventListener("click", (event) => {
     render();
     showMessage("Übung gelöscht.");
   }
-  if (action === "delete-set") {
-    state.sets = state.sets.filter((item) => item.id !== id);
-    saveState();
-    render();
-    showMessage("Satz aus dem Verlauf entfernt.");
-  }
   if (action === "delete-day") {
     const plan = activePlan();
     if (!plan || !window.confirm("Diesen Trainingstag wirklich löschen?")) return;
@@ -451,15 +431,6 @@ document.addEventListener("submit", (event) => {
   render();
   expandedExercises.add(form.dataset.exerciseId);
   showMessage(`${setCount} Sätze gespeichert – stark gemacht!`);
-});
-
-document.querySelector("#clear-history-button").addEventListener("click", () => {
-  if (!state.sets.length) return;
-  if (!window.confirm("Möchtest du wirklich den gesamten Trainingsverlauf löschen?")) return;
-  state.sets = [];
-  saveState();
-  render();
-  showMessage("Trainingsverlauf gelöscht.");
 });
 
 render();
