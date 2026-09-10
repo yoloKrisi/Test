@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#12372a" />
+    <title>GymLog – Dein Trainingsprotokoll</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-content">
+        <a class="brand" href="#" aria-label="GymLog Startseite">
+          <span class="brand-mark" aria-hidden="true">G</span>
+          <span>Gym<span class="brand-accent">Log</span></span>
+        </a>
+        <p class="header-date" id="today-label"></p>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Dein Fortschritt, dein Rhythmus</p>
+          <h1 id="page-title">Trainiere. Tracke.<br /><span>Werde stärker.</span></h1>
+          <p class="hero-copy">Halte Übungen, Sätze und Fortschritte an einem Ort fest.</p>
+        </div>
+        <div class="hero-stat" aria-label="Anzahl gespeicherter Trainingseinträge">
+          <strong id="total-sets">0</strong>
+          <span>gespeicherte Sätze</span>
+        </div>
+      </section>
+
+      <div id="app-message" class="app-message" role="status" aria-live="polite"></div>
+
+      <section class="dashboard-grid">
+        <article class="card form-card">
+          <div class="card-heading">
+            <div>
+              <p class="section-label">Neuer Eintrag</p>
+              <h2>Training erfassen</h2>
+            </div>
+            <span class="card-icon" aria-hidden="true">↗</span>
+          </div>
+          <form id="set-form" novalidate>
+            <div class="field">
+              <label for="exercise-select">Übung</label>
+              <select id="exercise-select" required></select>
+              <p class="field-error" data-error-for="exercise"></p>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="weight">Gewicht <span class="unit">(kg)</span></label>
+                <input id="weight" name="weight" type="number" min="0" max="1000" step="0.5" inputmode="decimal" placeholder="z. B. 60" required />
+                <p class="field-error" data-error-for="weight"></p>
+              </div>
+              <div class="field">
+                <label for="repetitions">Wiederholungen</label>
+                <input id="repetitions" name="repetitions" type="number" min="1" max="1000" step="1" inputmode="numeric" placeholder="z. B. 10" required />
+                <p class="field-error" data-error-for="repetitions"></p>
+              </div>
+            </div>
+            <div class="field">
+              <label for="set-date">Datum</label>
+              <input id="set-date" name="date" type="date" required />
+              <p class="field-error" data-error-for="date"></p>
+            </div>
+            <button class="button button-primary button-full" type="submit">Satz speichern <span aria-hidden="true">→</span></button>
+          </form>
+        </article>
+
+        <article class="card exercise-card">
+          <div class="card-heading">
+            <div>
+              <p class="section-label">Bibliothek</p>
+              <h2>Übungen</h2>
+            </div>
+            <button class="button button-small" id="add-exercise-button" type="button">+ Hinzufügen</button>
+          </div>
+          <div id="exercise-list" class="exercise-list"></div>
+          <p id="empty-exercises" class="empty-state">Noch keine Übungen angelegt.</p>
+        </article>
+      </section>
+
+      <section class="card history-card" aria-labelledby="history-title">
+        <div class="card-heading history-heading">
+          <div>
+            <p class="section-label">Deine Aktivität</p>
+            <h2 id="history-title">Trainingsverlauf</h2>
+          </div>
+          <button class="text-button" id="clear-history-button" type="button">Verlauf löschen</button>
+        </div>
+        <div id="history-list" class="history-list"></div>
+        <p id="empty-history" class="empty-state">Dein Trainingsverlauf ist noch leer. Der erste Satz wartet auf dich.</p>
+      </section>
+    </main>
+
+    <dialog id="exercise-dialog" class="modal">
+      <form id="exercise-form" method="dialog">
+        <div class="modal-heading">
+          <div>
+            <p class="section-label">Bibliothek</p>
+            <h2 id="dialog-title">Übung hinzufügen</h2>
+          </div>
+          <button class="close-button" id="close-dialog-button" type="button" aria-label="Dialog schließen">×</button>
+        </div>
+        <div class="field">
+          <label for="exercise-name">Name der Übung</label>
+          <input id="exercise-name" maxlength="60" required placeholder="z. B. Kniebeugen" />
+          <p class="field-error" id="exercise-name-error"></p>
+        </div>
+        <div class="modal-actions">
+          <button class="button button-quiet" id="cancel-dialog-button" type="button">Abbrechen</button>
+          <button class="button button-primary" type="submit">Speichern</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
+</html>

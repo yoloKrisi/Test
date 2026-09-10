@@ -1,0 +1,9 @@
+{
+  "name": "gymlog",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Eine kleine, dependency-freie Gym-App zum Tracken von Übungen und Trainingssätzen.",
+  "scripts": {
+    "check": "node --check app.js"
+  }
+}
