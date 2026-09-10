@@ -44,6 +44,8 @@ body.dark-mode .calendar-heading { color: #aeb6b2; }
 .calendar-grid > span { min-height: 32px; }
 .calendar-weekday { color: var(--muted); font-size: .68rem; font-weight: 800; text-align: center; }
 .calendar-day { position: relative; aspect-ratio: 1; min-width: 0; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: .72rem; }
+.calendar-day-number { display: inline-flex; align-items: center; gap: 3px; }
+.weight-record-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #facc15; box-shadow: 0 0 5px rgba(250, 204, 21, .7); }
 .calendar-day:hover { background: var(--mint); }
 .calendar-day.restday { color: #6b7280; border-color: #9ca3af; background: #e5e7eb; }
 .calendar-day.laufen { border-color: #3b82f6; background: #dbeafe; }

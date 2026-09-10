@@ -207,6 +207,19 @@ function renderExercises() {
   document.querySelector("#add-day-exercise-button").disabled = !activeDay() || !available.length;
 }
 
+function isWeightRecord(date) {
+  const dayEntries = state.sets.filter((entry) => entry.date === date);
+  return dayEntries.some((entry) => {
+    const weight = Number(entry.weight);
+    if (!Number.isFinite(weight)) return false;
+    const previousWeights = state.sets
+      .filter((candidate) => candidate.exerciseId === entry.exerciseId && candidate.date < date)
+      .map((candidate) => Number(candidate.weight))
+      .filter((candidate) => Number.isFinite(candidate));
+    return !previousWeights.length || weight > Math.max(...previousWeights);
+  });
+}
+
 function renderCalendar() {
   const year = calendarCursor.getFullYear();
   const month = calendarCursor.getMonth();
@@ -228,7 +241,8 @@ function renderCalendar() {
     const markerHtml = mark.filter((name) => name !== "sauna").map((name) => isTrainingMarker(name)
       ? `<span class="training-day-label" data-training-day-id="${escapeHtml(name.slice("training:".length))}">${escapeHtml(markerLabel(name))}</span>`
       : symbolMarkup(name)).join("");
-    elements.calendarGrid.insertAdjacentHTML("beforeend", `<button class="calendar-day ${classes}${trainingClass}" type="button" data-date="${date}">${day}<span class="calendar-symbols${stackedClass}">${markerHtml}</span></button>`);
+    const recordDot = isWeightRecord(date) ? '<span class="weight-record-dot" title="Neuer Gewichtsrekord" aria-label="Neuer Gewichtsrekord"></span>' : "";
+    elements.calendarGrid.insertAdjacentHTML("beforeend", `<button class="calendar-day ${classes}${trainingClass}" type="button" data-date="${date}"><span class="calendar-day-number">${day}${recordDot}</span><span class="calendar-symbols${stackedClass}">${markerHtml}</span></button>`);
   }
 }
 
@@ -690,6 +704,7 @@ document.addEventListener("input", (event) => {
   saveState();
   elements.totalSets.textContent = state.sets.length.toLocaleString("de-DE");
   elements.totalVolume.textContent = state.sets.reduce((sum, entry) => sum + Number(entry.weight) * Number(entry.repetitions), 0).toLocaleString("de-DE");
+  renderCalendar();
   window.requestAnimationFrame(() => {
     document.querySelectorAll("[data-chart-exercise]").forEach((canvas) => drawExerciseChart(canvas, canvas.dataset.chartExercise));
   });
