@@ -40,6 +40,12 @@ button { cursor: pointer; }
 .calendar-weekday { color: var(--muted); font-size: .68rem; font-weight: 800; text-align: center; }
 .calendar-day { position: relative; min-height: 34px; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: .78rem; }
 .calendar-day:hover { background: var(--mint); }
+.calendar-day.restday { color: #6b7280; border-color: #9ca3af; background: #e5e7eb; }
+.calendar-day.krankheit { color: #b4232f; border-color: #ef4444; background: #fee2e2; }
+.calendar-day.sauna { overflow: hidden; }
+.calendar-day.sauna::after { content: ""; position: absolute; right: 0; bottom: 0; left: 0; height: 7px; background: linear-gradient(90deg, #f97316, #fbbf24, #ef4444, #f97316); }
+.calendar-day.sauna .calendar-symbols { position: relative; z-index: 1; }
+.calendar-day.laufen .calendar-symbols { position: relative; z-index: 1; }
 .calendar-symbols { display: flex; justify-content: center; gap: 2px; min-height: 18px; }
 .person-symbol { display: block; width: 18px; height: 28px; }
 .person-symbol.large { width: 34px; height: 58px; }

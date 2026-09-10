@@ -33,11 +33,11 @@ let activeDayId = null;
 let calendarCursor = new Date();
 let selectedDate = null;
 const expandedExercises = new Set();
-const SYMBOLS = ["sauna", "laufen", "restday", "krankheit", "brust-rücken", "schultern-arme", "beine", "beine-bauch", "bauch", "arme", "brust", "rücken", "schultern", "push", "pull", "full body", "upper", "lower"];
+const SYMBOLS = ["sauna", "laufen", "restday", "krankheit"];
 
 function symbolMarkup(name, size = "small") {
   const special = {
-    laufen: '<path d="M20 48 L33 40 L43 47 L36 51 L27 48 L20 57 L11 64" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 37 L24 29 L29 23 L37 28 L45 28" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="31" cy="17" r="6" fill="#fff" stroke="#111" stroke-width="2"/>',
+    laufen: '<path d="M14 45 Q22 32 31 30 L42 40 L57 47 Q61 50 57 55 L43 55 L32 48 L23 60 L10 60 Q7 57 11 53Z" fill="#fff" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M39 43 L55 49 M27 47 L39 52" stroke="#111" stroke-width="2" stroke-linecap="round"/>',
     sauna: '<path d="M19 57 Q19 47 27 42 Q35 37 43 42 Q51 47 51 57Z" fill="#ff9f43" stroke="#111" stroke-width="2"/><path d="M27 37 C20 30 31 28 25 20 M38 37 C31 30 42 28 36 20 M47 37 C40 30 51 28 45 20" fill="none" stroke="#f27525" stroke-width="3" stroke-linecap="round"/>',
     restday: '<path d="M15 18 L50 18 L50 50 L15 50Z" fill="#e5e7eb" stroke="#555" stroke-width="2" rx="5"/><text x="32" y="42" text-anchor="middle" font-size="28" font-family="Arial" font-weight="700" fill="#6b7280">Z</text>',
     krankheit: '<circle cx="35" cy="35" r="20" fill="#fff" stroke="#111" stroke-width="2"/><path d="M35 23 L35 47 M23 35 L47 35" stroke="#d9363e" stroke-width="7" stroke-linecap="round"/>',
@@ -89,7 +89,7 @@ function loadState() {
         plans: plans.length ? plans : [{ id: createId(), name: "Mein Training", days: [] }],
         calendar: Object.fromEntries(Object.entries(saved.calendar || {}).map(([date, value]) => [
           date,
-          Array.isArray(value) ? value : [],
+          (Array.isArray(value) ? value : []).filter((name) => SYMBOLS.includes(name)),
         ])),
       };
     }
@@ -152,8 +152,8 @@ function renderCalendar() {
   for (let index = 0; index < offset; index += 1) elements.calendarGrid.insertAdjacentHTML("beforeend", "<span></span>");
   for (let day = 1; day <= days; day += 1) {
     const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    const mark = state.calendar[date] || [];
-    elements.calendarGrid.insertAdjacentHTML("beforeend", `<button class="calendar-day" type="button" data-date="${date}">${day}<span class="calendar-symbols">${mark.map((name) => symbolMarkup(name)).join("")}</span></button>`);
+    const mark = (state.calendar[date] || []).filter((name) => SYMBOLS.includes(name));
+    elements.calendarGrid.insertAdjacentHTML("beforeend", `<button class="calendar-day ${mark.join(" ")}" type="button" data-date="${date}">${day}<span class="calendar-symbols">${mark.map((name) => symbolMarkup(name)).join("")}</span></button>`);
   }
   elements.symbolLegend.innerHTML = SYMBOLS.map((name) => `<span><i>${symbolMarkup(name)}</i>${name}</span>`).join("");
 }
