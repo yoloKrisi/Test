@@ -346,12 +346,17 @@ function renderDayExercise(exerciseId) {
     </div>
     <div class="exercise-panel">
       <div class="set-rows" data-exercise-id="${escapeHtml(exerciseId)}">
-        ${exercise.rows.map((row, index) => `<div class="set-row">
+        ${exercise.rows.map((row, index) => {
+          const previousEntry = state.sets
+            .filter((entry) => entry.rowId === row.id)
+            .sort((a, b) => `${b.date}${b.createdAt}`.localeCompare(`${a.date}${a.createdAt}`))[0];
+          return `<div class="set-row">
           <span class="set-number">${index + 1}</span>
-          <label>Gewicht<input data-row-field="weight" data-row-id="${escapeHtml(row.id)}" type="number" min="0" max="1000" step="0.5" value="${escapeHtml(row.weight)}" placeholder="kg" /></label>
-          <label>Wdh.<input data-row-field="repetitions" data-row-id="${escapeHtml(row.id)}" type="number" min="1" max="1000" step="1" value="${escapeHtml(row.repetitions)}" placeholder="10" /></label>
+          <label>Gewicht<input data-row-field="weight" data-row-id="${escapeHtml(row.id)}" type="number" min="0" max="1000" step="0.5" value="${escapeHtml(row.weight)}" placeholder="${escapeHtml(previousEntry?.weight ?? "kg")}" /></label>
+          <label>Wdh.<input data-row-field="repetitions" data-row-id="${escapeHtml(row.id)}" type="number" min="1" max="1000" step="1" value="${escapeHtml(row.repetitions)}" placeholder="${escapeHtml(previousEntry?.repetitions ?? "10")}" /></label>
           <button class="icon-button" type="button" data-action="remove-row" data-exercise-id="${escapeHtml(exerciseId)}" data-row-id="${escapeHtml(row.id)}" aria-label="Satz entfernen">−</button>
-        </div>`).join("")}
+        </div>`;
+        }).join("")}
       </div>
       <div class="set-actions">
         <button class="button button-quiet button-small add-set-button" type="button" data-action="add-row" data-exercise-id="${escapeHtml(exerciseId)}">+ Satz</button>
