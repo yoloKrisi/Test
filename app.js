@@ -58,15 +58,14 @@ function markerLabel(name) {
 }
 
 function symbolMarkup(name, size = "small") {
+  if (name === "laufen") return '<span class="training-day-label running-label">Laufen</span>';
   const special = {
-    laufen: '<text x="70" y="43" text-anchor="middle" font-size="28" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-weight="800" fill="#aeb6b2">Laufen</text>',
     sauna: '<circle cx="35" cy="35" r="17" fill="#f59e0b" stroke="#c2410c" stroke-width="3"/>',
     restday: '<text x="35" y="48" text-anchor="middle" font-size="42" font-family="Arial" font-weight="700" fill="#17365d">Z</text>',
     krankheit: '<path d="M35 18 L35 52 M18 35 L52 35" stroke="#d9363e" stroke-width="8" stroke-linecap="round"/>',
   };
   if (Object.prototype.hasOwnProperty.call(special, name)) {
-    const viewBox = name === "laufen" ? "0 0 140 70" : "0 0 70 70";
-    return `<svg class="person-symbol ${size} special-symbol ${name === "laufen" ? "running-symbol" : ""}" viewBox="${viewBox}" aria-hidden="true">${special[name]}</svg>`;
+    return `<svg class="person-symbol ${size} special-symbol" viewBox="0 0 70 70" aria-hidden="true">${special[name]}</svg>`;
   }
   const highlighted = {
     "brust-rücken": "chest back", "schultern-arme": "shoulders arms", beine: "legs",
