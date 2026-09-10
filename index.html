@@ -14,12 +14,18 @@
           <span class="brand-mark" aria-hidden="true">G</span>
           <span>Gym<span class="brand-accent">Log</span></span>
         </a>
+        <nav class="main-nav" aria-label="Hauptnavigation">
+          <a href="#overview">Übersicht</a>
+          <a href="#plan-section">Trainingsplan</a>
+          <a href="#log-section">Training erfassen</a>
+          <a href="#progress-section">Fortschritt</a>
+        </nav>
         <p class="header-date" id="today-label"></p>
       </div>
     </header>
 
     <main class="app-shell">
-      <section class="hero" aria-labelledby="page-title">
+      <section class="hero" id="overview" aria-labelledby="page-title">
         <div>
           <p class="eyebrow">Dein Fortschritt, dein Rhythmus</p>
           <h1 id="page-title">Trainiere. Tracke.<br /><span>Werde stärker.</span></h1>
@@ -33,7 +39,7 @@
 
       <div id="app-message" class="app-message" role="status" aria-live="polite"></div>
 
-      <section class="card plans-card" aria-labelledby="plans-title">
+      <section class="card plans-card" id="plan-section" aria-labelledby="plans-title">
         <div class="card-heading">
           <div>
             <p class="section-label">Organisation</p>
@@ -61,7 +67,7 @@
         </div>
       </section>
 
-      <section class="dashboard-grid">
+      <section class="dashboard-grid" id="log-section" aria-label="Training erfassen und Übungen verwalten">
         <article class="card form-card">
           <div class="card-heading">
             <div>
@@ -118,7 +124,7 @@
         <p id="empty-history" class="empty-state">Dein Trainingsverlauf ist noch leer. Der erste Satz wartet auf dich.</p>
       </section>
 
-      <section class="card chart-card" aria-labelledby="chart-title">
+      <section class="card chart-card" id="progress-section" aria-labelledby="chart-title">
         <div class="card-heading">
           <div>
             <p class="section-label">Fortschritt</p>
