@@ -35,10 +35,30 @@ let selectedDate = null;
 const expandedExercises = new Set();
 const SYMBOLS = ["sauna", "laufen", "restday", "krankheit"];
 
+function trainingMarker(dayId) {
+  return `training:${dayId}`;
+}
+
+function isTrainingMarker(name) {
+  return typeof name === "string" && name.startsWith("training:");
+}
+
+function calendarMarkers() {
+  const dayMarkers = (activePlan()?.days || []).map((day) => trainingMarker(day.id));
+  return [...SYMBOLS, ...dayMarkers];
+}
+
+function markerLabel(name) {
+  if (isTrainingMarker(name)) {
+    return activePlan()?.days.find((day) => trainingMarker(day.id) === name)?.name || "Trainingstag";
+  }
+  return name;
+}
+
 function symbolMarkup(name, size = "small") {
   const special = {
-    laufen: '<path d="M10 43 Q18 40 25 28 L34 31 L40 42 L58 49 Q62 52 58 57 L39 57 Q34 55 29 50 L24 45 L18 57 L7 57 Q4 54 10 43Z" fill="#fff" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M34 32 L42 42 L55 49 M25 45 L37 51" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round"/>',
-    sauna: "",
+    laufen: '<path d="M10 35 H55 M40 20 L55 35 L40 50" fill="none" stroke="#111" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>',
+    sauna: '<circle cx="35" cy="35" r="17" fill="#f59e0b" stroke="#c2410c" stroke-width="3"/>',
     restday: '<text x="35" y="48" text-anchor="middle" font-size="42" font-family="Arial" font-weight="700" fill="#17365d">Z</text>',
     krankheit: '<path d="M35 18 L35 52 M18 35 L52 35" stroke="#d9363e" stroke-width="8" stroke-linecap="round"/>',
   };
@@ -84,12 +104,13 @@ function loadState() {
           exerciseIds: Array.isArray(day.exerciseIds) ? day.exerciseIds : [],
         })),
       }));
+      const allowedMarkers = [...SYMBOLS, ...plans.flatMap((plan) => plan.days.map((day) => trainingMarker(day.id)))];
       return {
         ...saved,
         plans: plans.length ? plans : [{ id: createId(), name: "Mein Training", days: [] }],
         calendar: Object.fromEntries(Object.entries(saved.calendar || {}).map(([date, value]) => [
           date,
-          (Array.isArray(value) ? value : []).filter((name) => SYMBOLS.includes(name)),
+          (Array.isArray(value) ? value : []).filter((name) => allowedMarkers.includes(name)),
         ])),
       };
     }
@@ -152,15 +173,24 @@ function renderCalendar() {
   for (let index = 0; index < offset; index += 1) elements.calendarGrid.insertAdjacentHTML("beforeend", "<span></span>");
   for (let day = 1; day <= days; day += 1) {
     const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    const mark = (state.calendar[date] || []).filter((name) => SYMBOLS.includes(name));
-    elements.calendarGrid.insertAdjacentHTML("beforeend", `<button class="calendar-day ${mark.join(" ")}" type="button" data-date="${date}">${day}<span class="calendar-symbols">${mark.map((name) => symbolMarkup(name)).join("")}</span></button>`);
+    const mark = (state.calendar[date] || []).filter((name) => calendarMarkers().includes(name));
+    if (!mark.length) mark.push("restday");
+    const trainingMark = mark.find(isTrainingMarker);
+    const classes = mark.filter((name) => SYMBOLS.includes(name)).join(" ");
+    const trainingClass = trainingMark ? " training-day" : "";
+    const markerHtml = mark.map((name) => isTrainingMarker(name)
+      ? `<span class="training-day-label">${escapeHtml(markerLabel(name))}</span>`
+      : symbolMarkup(name)).join("");
+    elements.calendarGrid.insertAdjacentHTML("beforeend", `<button class="calendar-day ${classes}${trainingClass}" type="button" data-date="${date}">${day}<span class="calendar-symbols">${markerHtml}</span></button>`);
   }
-  elements.symbolLegend.innerHTML = SYMBOLS.map((name) => `<span><i>${symbolMarkup(name)}</i>${name}</span>`).join("");
+  const legendMarkers = [...SYMBOLS, ...(activePlan()?.days || []).map((day) => trainingMarker(day.id))];
+  elements.symbolLegend.innerHTML = legendMarkers.map((name) => `<span><i>${isTrainingMarker(name) ? `<b class="training-day-legend">${escapeHtml(markerLabel(name))}</b>` : symbolMarkup(name)}</i>${isTrainingMarker(name) ? "" : name}</span>`).join("");
 }
 
 function renderSymbolPicker() {
-  const selected = selectedDate ? (state.calendar[selectedDate] || []) : [];
-  elements.symbolPicker.innerHTML = SYMBOLS.map((name) => `<button type="button" class="symbol-choice ${selected.includes(name) ? "selected" : ""}" data-symbol="${escapeHtml(name)}"><b>${symbolMarkup(name, "large")}</b><span>${name}</span></button>`).join("");
+  const selected = selectedDate ? (state.calendar[selectedDate] || [ "restday" ]) : [];
+  const options = [...SYMBOLS, ...(activePlan()?.days || []).map((day) => trainingMarker(day.id))];
+  elements.symbolPicker.innerHTML = options.map((name) => `<button type="button" class="symbol-choice ${selected.includes(name) ? "selected" : ""}" data-symbol="${escapeHtml(name)}"><b>${isTrainingMarker(name) ? `<span class="training-day-picker">${escapeHtml(markerLabel(name))}</span>` : symbolMarkup(name, "large")}</b><span>${isTrainingMarker(name) ? "Trainingstag" : name}</span></button>`).join("");
 }
 
 function activePlan() {
@@ -440,12 +470,14 @@ elements.calendarGrid.addEventListener("click", (event) => {
 elements.symbolPicker.addEventListener("click", (event) => {
   const button = event.target.closest("[data-symbol]");
   if (!button || !selectedDate) return;
-  const current = state.calendar[selectedDate] || [];
+  const current = state.calendar[selectedDate] || ["restday"];
   const symbol = button.dataset.symbol;
   if (current.includes(symbol)) state.calendar[selectedDate] = current.filter((item) => item !== symbol);
+  else if (symbol === "restday") state.calendar[selectedDate] = ["restday"];
+  else if (current.length === 1 && current[0] === "restday") state.calendar[selectedDate] = [symbol];
   else if (current.length < 2) state.calendar[selectedDate] = [...current, symbol];
   else state.calendar[selectedDate] = [current[1], symbol];
-  if (!state.calendar[selectedDate].length) delete state.calendar[selectedDate];
+  if (!state.calendar[selectedDate].length || (state.calendar[selectedDate].length === 1 && state.calendar[selectedDate][0] === "restday")) delete state.calendar[selectedDate];
   saveState();
   renderCalendar();
   renderSymbolPicker();

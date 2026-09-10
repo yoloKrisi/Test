@@ -42,10 +42,15 @@ button { cursor: pointer; }
 .calendar-day:hover { background: var(--mint); }
 .calendar-day.restday { color: #6b7280; border-color: #9ca3af; background: #e5e7eb; }
 .calendar-day.krankheit { color: #b4232f; border-color: #ef4444; background: #fee2e2; }
-.calendar-day.sauna { overflow: hidden; }
+.calendar-day.sauna { overflow: hidden; border-color: #f59e0b; }
 .calendar-day.sauna::after { content: ""; position: absolute; right: 0; bottom: 0; left: 0; height: 7px; background: linear-gradient(90deg, #f97316, #fbbf24, #ef4444, #f97316); }
 .calendar-day.sauna .calendar-symbols { position: relative; z-index: 1; }
 .calendar-day.laufen .calendar-symbols { position: relative; z-index: 1; }
+.calendar-day.training-day { color: #111; border-color: #4d9b62; background: #d9f2df; }
+.calendar-day.training-day:hover { background: #c7e9d0; }
+.training-day-label { display: block; max-width: 100%; overflow: hidden; color: #111; font-size: .58rem; font-weight: 800; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
+.training-day-picker { display: block; width: 100%; padding: 14px 5px; color: #111; border: 2px solid #4d9b62; border-radius: 7px; background: #d9f2df; font-size: .78rem; text-align: center; }
+.training-day-legend { color: #111; font-size: .68rem; font-weight: 800; }
 .calendar-symbols { display: flex; justify-content: center; gap: 2px; min-height: 18px; }
 .person-symbol { display: block; width: 18px; height: 28px; }
 .person-symbol.large { width: 34px; height: 58px; }
