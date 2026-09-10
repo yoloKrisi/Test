@@ -339,10 +339,12 @@ function renderHistory() {
   const firstDate = new Date(`${dates[0]}T12:00:00`);
   const lastDate = new Date(`${dates[dates.length - 1]}T12:00:00`);
   const weeks = Math.max(1, (lastDate - firstDate) / 86400000 / 7);
-  const countDates = (predicate) => new Set(dates.filter((date) => predicate(state.calendar[date] || []))).size;
-  const trainingCount = countDates((markers) => markers.some(isTrainingMarker));
-  const runningCount = countDates((markers) => markers.includes("laufen"));
-  const saunaCount = countDates((markers) => markers.includes("sauna"));
+  const countActivityDates = (predicate) => dates.reduce((count, date) => (
+    predicate(state.calendar[date] || []) ? count + 1 : count
+  ), 0);
+  const trainingCount = countActivityDates((markers) => markers.some(isTrainingMarker));
+  const runningCount = countActivityDates((markers) => markers.includes("laufen"));
+  const saunaCount = countActivityDates((markers) => markers.includes("sauna"));
   const stat = (label, count, className) => `<span class="frequency-stat ${className}"><strong>${(count / weeks).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</strong> ${label} / Woche</span>`;
   elements.frequencyStats.innerHTML = [
     activePlan()?.days.length ? stat("Trainingstage", trainingCount, "training-frequency") : "",
