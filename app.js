@@ -209,7 +209,7 @@ function renderPlans() {
   elements.trainingDayTabs.innerHTML = (plan?.days || []).map((day) => `
     <button class="training-day-tab ${day.id === activeDayId ? "active" : ""}" type="button"
       role="tab" aria-selected="${day.id === activeDayId}" data-action="select-day" data-id="${escapeHtml(day.id)}">
-      ${escapeHtml(day.name)}
+      <span data-training-day-id="${escapeHtml(day.id)}">${escapeHtml(day.name)}</span>
     </button>
   `).join("") + '<button class="training-day-tab add-tab" type="button" data-action="add-day" aria-label="Neuen Trainingstag hinzufügen">+</button>';
   const day = activeDay();
@@ -583,11 +583,7 @@ document.addEventListener("input", (event) => {
   });
 });
 
-document.addEventListener("dblclick", (event) => {
-  const tab = event.target.closest(".training-day-tab[data-id]");
-  const label = event.target.closest("[data-training-day-id]");
-  const dayId = tab?.dataset.id || label?.dataset.trainingDayId;
-  if (!dayId) return;
+function editTrainingDay(dayId) {
   const day = activePlan()?.days.find((item) => item.id === dayId);
   if (!day) return;
   const enteredName = window.prompt("Trainingstag bearbeiten. Für Löschen den Namen leeren:", day.name);
@@ -608,14 +604,22 @@ document.addEventListener("dblclick", (event) => {
     return;
   }
   if (name === day.name) return;
-  if (activePlan().days.some((item) => item.id !== day.id && item.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+  if (activePlan().days.some((item) => item !== day && item.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
     showMessage("Diesen Trainingstag gibt es bereits.");
     return;
   }
   day.name = name;
   saveState();
-  renderPlans();
+  render();
   showMessage("Trainingstag umbenannt.");
+}
+
+document.addEventListener("dblclick", (event) => {
+  const label = event.target.closest("[data-training-day-id]");
+  const tab = event.target.closest(".training-day-tab[data-id]");
+  const dayId = label?.dataset.trainingDayId || tab?.dataset.id;
+  if (!dayId) return;
+  editTrainingDay(dayId);
 });
 
 
