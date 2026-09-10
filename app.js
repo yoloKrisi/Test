@@ -185,8 +185,6 @@ function renderCalendar() {
       : symbolMarkup(name)).join("");
     elements.calendarGrid.insertAdjacentHTML("beforeend", `<button class="calendar-day ${classes}${trainingClass}" type="button" data-date="${date}">${day}<span class="calendar-symbols">${markerHtml}</span></button>`);
   }
-  const legendMarkers = [...SYMBOLS, ...(activePlan()?.days || []).map((day) => trainingMarker(day.id))];
-  elements.symbolLegend.innerHTML = legendMarkers.map((name) => `<span><i>${isTrainingMarker(name) ? `<b class="training-day-legend">${escapeHtml(markerLabel(name))}</b>` : symbolMarkup(name)}</i>${isTrainingMarker(name) ? "" : name}</span>`).join("");
 }
 
 function renderSymbolPicker() {
