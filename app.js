@@ -223,7 +223,7 @@ function isWeightRecord(date) {
 
 function renderTrainingDayStats() {
   const days = activePlan()?.days || [];
-  const stats = days.map((day) => {
+  const stats = days.map((day, index) => {
     const exerciseIds = new Set(day.exerciseIds);
     const dates = Object.keys(state.calendar)
       .filter((date) => state.calendar[date].includes(trainingMarker(day.id)))
@@ -240,11 +240,31 @@ function renderTrainingDayStats() {
       ? Math.max(1, (Math.floor((lastDate - firstDate) / 86400000) + 1) / 7)
       : 1;
     const perWeek = count / weeks;
-    return `<div class="training-day-stat">
-      <div class="training-day-ring" style="--ring-value: ${percentage * 3.6}deg"><strong>${percentage}%</strong></div>
-      <div><strong class="training-day-stat-name">${escapeHtml(day.name)}</strong><span>${perWeek.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Sätze / Woche</span><span>${count} Sätze insgesamt</span></div>
-    </div>`;
-  }).join("") : "";
+    return { day, count, perWeek, percentage, color: ["#facc15", "#60a5fa", "#a78bfa", "#34d399", "#fb7185", "#f97316"][index % 6] };
+  });
+  const totalPerWeek = stats.reduce((sum, item) => sum + item.perWeek, 0);
+  let currentDegree = 0;
+  const segments = stats.map((item) => {
+    const start = currentDegree;
+    currentDegree += totalPerWeek ? (item.perWeek / totalPerWeek) * 360 : 0;
+    return `${item.color} ${start}deg ${currentDegree}deg`;
+  });
+  elements.trainingDayStats.innerHTML = stats.length ? `
+    <div class="training-day-ring-wrap">
+      <div class="training-day-ring" style="--ring-gradient: conic-gradient(${segments.join(", ")});">
+        <strong>${totalPerWeek.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</strong>
+        <span>Sätze/Woche</span>
+      </div>
+    </div>
+    <div class="training-day-stat-list">
+      ${stats.map(({ day, count, perWeek, color }) => {
+        const percentage = totalPerWeek ? Math.round((perWeek / totalPerWeek) * 100) : 0;
+        return `<div class="training-day-stat">
+          <span class="training-day-stat-color" style="--stat-color: ${color}"></span>
+          <div><strong class="training-day-stat-name">${escapeHtml(day.name)}</strong><span>${perWeek.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Sätze / Woche · ${percentage}%</span><span>${count} Sätze insgesamt</span></div>
+        </div>`;
+      }).join("")}
+    </div>` : "";
 }
 
 function renderCalendar() {
