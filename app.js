@@ -2,14 +2,12 @@ const STORAGE_KEY = "gymlog-data-v1";
 const DEFAULT_EXERCISES = ["Bankdrücken", "Kniebeugen", "Kreuzheben"];
 
 const elements = {
-  exerciseSelect: document.querySelector("#exercise-select"),
   exerciseList: document.querySelector("#exercise-list"),
   emptyExercises: document.querySelector("#empty-exercises"),
   historyList: document.querySelector("#history-list"),
   emptyHistory: document.querySelector("#empty-history"),
   totalSets: document.querySelector("#total-sets"),
   todayLabel: document.querySelector("#today-label"),
-  setForm: document.querySelector("#set-form"),
   message: document.querySelector("#app-message"),
   dialog: document.querySelector("#exercise-dialog"),
   dialogTitle: document.querySelector("#dialog-title"),
@@ -20,8 +18,10 @@ const elements = {
   planList: document.querySelector("#plan-list"),
   activePlanName: document.querySelector("#active-plan-name"),
   trainingDays: document.querySelector("#training-days"),
+  trainingDayTabs: document.querySelector("#training-day-tabs"),
   emptyPlan: document.querySelector("#empty-plan"),
   addDayButton: document.querySelector("#add-day-button"),
+  dayExerciseSelect: document.querySelector("#day-exercise-select"),
   planDialog: document.querySelector("#plan-dialog"),
   planForm: document.querySelector("#plan-form"),
   planName: document.querySelector("#plan-name"),
@@ -38,6 +38,8 @@ const elements = {
 let state = loadState();
 let editingExerciseId = null;
 let activePlanId = null;
+let activeDayId = null;
+const expandedExercises = new Set();
 
 function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -47,7 +49,16 @@ function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (saved && Array.isArray(saved.exercises) && Array.isArray(saved.sets)) {
-      return { ...saved, plans: Array.isArray(saved.plans) ? saved.plans : [] };
+      return {
+        ...saved,
+        plans: (Array.isArray(saved.plans) ? saved.plans : []).map((plan) => ({
+          ...plan,
+          days: (Array.isArray(plan.days) ? plan.days : []).map((day) => ({
+            ...day,
+            exerciseIds: Array.isArray(day.exerciseIds) ? day.exerciseIds : [],
+          })),
+        })),
+      };
     }
   } catch (error) {
     console.warn("Gespeicherte Trainingsdaten konnten nicht gelesen werden.", error);
@@ -88,10 +99,6 @@ function showMessage(text) {
 
 function renderExercises() {
   const sorted = [...state.exercises].sort((a, b) => a.name.localeCompare(b.name, "de"));
-  elements.exerciseSelect.innerHTML = sorted.length
-    ? sorted.map((exercise) => `<option value="${escapeHtml(exercise.id)}">${escapeHtml(exercise.name)}</option>`).join("")
-    : '<option value="">Zuerst Übung anlegen</option>';
-  elements.exerciseSelect.disabled = sorted.length === 0;
   elements.exerciseList.innerHTML = sorted.map((exercise) => `
     <div class="exercise-row">
       <span class="exercise-name">${escapeHtml(exercise.name)}</span>
@@ -114,30 +121,52 @@ function renderPlans() {
     : '<option value="">Noch kein Trainingsplan</option>';
   elements.planSelect.disabled = !plans.length;
   if (activePlanId) elements.planSelect.value = activePlanId;
-  elements.planList.innerHTML = plans.map((plan) => `
-    <div class="plan-row ${plan.id === activePlanId ? "active" : ""}">
-      <span>${escapeHtml(plan.name)}</span>
-      <button class="icon-button delete" type="button" data-action="delete-plan" data-id="${escapeHtml(plan.id)}">Löschen</button>
-    </div>
-  `).join("");
   const activePlan = plans.find((plan) => plan.id === activePlanId);
-  elements.activePlanName.textContent = activePlan?.name || "Kein Plan ausgewählt";
-  elements.addDayButton.disabled = !activePlan;
-  elements.trainingDays.innerHTML = activePlan?.days.map((day) => `
-    <div class="training-day">
-      <div class="training-day-heading">
-        <strong>${escapeHtml(day.name)}</strong>
-        <button class="icon-button delete" type="button" data-action="delete-day" data-id="${escapeHtml(day.id)}">Löschen</button>
-      </div>
-      <div class="day-exercises">
-        ${day.exerciseIds.length
-          ? day.exerciseIds.map((id) => state.exercises.find((exercise) => exercise.id === id)?.name)
-            .filter(Boolean).map((name) => `<span>${escapeHtml(name)}</span>`).join("")
-          : '<span class="day-empty">Noch keine Übungen zugeordnet</span>'}
-      </div>
-    </div>
+  if (activeDayId && !activePlan?.days.some((day) => day.id === activeDayId)) activeDayId = null;
+  if (!activeDayId && activePlan?.days.length) activeDayId = activePlan.days[0].id;
+  elements.trainingDayTabs.innerHTML = activePlan?.days.map((day) => `
+    <button class="training-day-tab ${day.id === activeDayId ? "active" : ""}" type="button"
+      role="tab" aria-selected="${day.id === activeDayId}" data-action="select-day" data-id="${escapeHtml(day.id)}">
+      ${escapeHtml(day.name)}
+    </button>
   `).join("") || "";
-  elements.emptyPlan.hidden = Boolean(activePlan?.days.length);
+  elements.addDayButton.disabled = !activePlan;
+  const activeDay = activePlan?.days.find((day) => day.id === activeDayId);
+  elements.trainingDays.innerHTML = activeDay ? activeDay.exerciseIds.map((exerciseId) => renderDayExercise(exerciseId)).join("") : "";
+  elements.emptyPlan.hidden = Boolean(activeDay);
+  const available = state.exercises.filter((exercise) => !activeDay?.exerciseIds.includes(exercise.id));
+  elements.dayExerciseSelect.innerHTML = available.length
+    ? available.map((exercise) => `<option value="${escapeHtml(exercise.id)}">${escapeHtml(exercise.name)}</option>`).join("")
+    : '<option value="">Alle Übungen sind bereits hinzugefügt</option>';
+  elements.dayExerciseSelect.disabled = !activeDay || !available.length;
+  document.querySelector("#add-day-exercise-button").disabled = !activeDay || !available.length;
+}
+
+function renderDayExercise(exerciseId) {
+  const exercise = state.exercises.find((item) => item.id === exerciseId);
+  if (!exercise) return "";
+  const entries = state.sets.filter((entry) => entry.exerciseId === exerciseId).sort((a, b) => `${b.date}${b.createdAt}`.localeCompare(`${a.date}${a.createdAt}`));
+  const expanded = expandedExercises.has(exerciseId);
+  const latest = entries[0];
+  return `<article class="day-exercise-card ${expanded ? "expanded" : ""}">
+    <div class="exercise-toggle">
+      <button class="exercise-toggle-main" type="button" data-action="toggle-exercise" data-id="${escapeHtml(exerciseId)}" aria-expanded="${expanded}">
+        <span class="exercise-toggle-name">${escapeHtml(exercise.name)}</span>
+        <span class="exercise-toggle-meta">${latest ? `${latest.weight.toLocaleString("de-DE")} kg · ${formatDate(latest.date)}` : "Noch kein Satz"} <span class="chevron">⌄</span></span>
+      </button>
+      <button class="icon-button delete exercise-remove" type="button" data-action="remove-day-exercise" data-id="${escapeHtml(exerciseId)}">Entfernen</button>
+    </div>
+    <div class="exercise-panel">
+      <form class="inline-set-form" data-exercise-id="${escapeHtml(exerciseId)}" novalidate>
+        <div class="field"><label>Gewicht (kg)</label><input name="weight" type="number" min="0" max="1000" step="0.5" required placeholder="60" /></div>
+        <div class="field"><label>Wiederholungen</label><input name="repetitions" type="number" min="1" max="1000" step="1" required placeholder="10" /></div>
+        <div class="field"><label>Anzahl Sätze</label><input name="setCount" type="number" min="1" max="30" step="1" value="3" required /></div>
+        <button class="button button-primary" type="submit">Sätze speichern</button>
+      </form>
+      <p class="today-note">Heute gespeichert · ${entries.length ? `${entries.length} historische Sätze` : "Noch kein Verlauf"}</p>
+      <div class="exercise-history">${entries.slice(0, 6).map((entry) => `<div><span>${formatDate(entry.date)}</span><strong>${entry.weight.toLocaleString("de-DE")} kg</strong><span>${entry.repetitions} Wdh.</span></div>`).join("") || '<p class="day-empty">Dein Gewichtsverlauf erscheint hier.</p>'}</div>
+    </div>
+  </article>`;
 }
 
 function renderChartExerciseOptions(sortedExercises) {
@@ -283,16 +312,6 @@ function closeDayDialog() {
 }
 
 elements.todayLabel.textContent = new Intl.DateTimeFormat("de-DE", { dateStyle: "long" }).format(new Date());
-elements.setForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const values = validateSet();
-  if (!values) return;
-  state.sets.push({ id: createId(), ...values, createdAt: Date.now() });
-  saveState();
-  elements.setForm.reset();
-  render();
-  showMessage("Satz gespeichert – stark gemacht!");
-});
 
 document.querySelector("#add-exercise-button").addEventListener("click", () => openExerciseDialog());
 document.querySelector("#close-dialog-button").addEventListener("click", closeExerciseDialog);
@@ -361,7 +380,18 @@ elements.dayForm.addEventListener("submit", (event) => {
 
 elements.planSelect.addEventListener("change", () => {
   activePlanId = elements.planSelect.value || null;
+  activeDayId = null;
   renderPlans();
+});
+document.querySelector("#add-day-exercise-button").addEventListener("click", () => {
+  const plan = state.plans.find((item) => item.id === activePlanId);
+  const day = plan?.days.find((item) => item.id === activeDayId);
+  const exerciseId = elements.dayExerciseSelect.value;
+  if (!day || !exerciseId || day.exerciseIds.includes(exerciseId)) return;
+  day.exerciseIds.push(exerciseId);
+  saveState();
+  renderPlans();
+  showMessage("Übung zum Trainingstag hinzugefügt.");
 });
 elements.chartExerciseSelect.addEventListener("change", drawChart);
 window.addEventListener("resize", drawChart);
@@ -370,6 +400,15 @@ document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-action]");
   if (!button) return;
   const { action, id } = button.dataset;
+  if (action === "select-day") {
+    activeDayId = id;
+    renderPlans();
+  }
+  if (action === "toggle-exercise") {
+    if (expandedExercises.has(id)) expandedExercises.delete(id);
+    else expandedExercises.add(id);
+    renderPlans();
+  }
   if (action === "edit") {
     const exercise = state.exercises.find((item) => item.id === id);
     if (exercise) openExerciseDialog(exercise);
@@ -378,6 +417,9 @@ document.addEventListener("click", (event) => {
     const exercise = state.exercises.find((item) => item.id === id);
     if (!exercise || !window.confirm(`"${exercise.name}" wirklich löschen? Die gespeicherten Sätze bleiben im Verlauf.`)) return;
     state.exercises = state.exercises.filter((item) => item.id !== id);
+    state.plans.forEach((plan) => plan.days.forEach((day) => {
+      day.exerciseIds = day.exerciseIds.filter((exerciseId) => exerciseId !== id);
+    }));
     saveState();
     render();
     showMessage("Übung gelöscht.");
@@ -405,6 +447,35 @@ document.addEventListener("click", (event) => {
     render();
     showMessage("Trainingstag gelöscht.");
   }
+  if (action === "remove-day-exercise") {
+    const plan = state.plans.find((item) => item.id === activePlanId);
+    const day = plan?.days.find((item) => item.id === activeDayId);
+    if (!day || !window.confirm("Diese Übung aus dem Trainingstag entfernen?")) return;
+    day.exerciseIds = day.exerciseIds.filter((exerciseId) => exerciseId !== id);
+    saveState();
+    renderPlans();
+    showMessage("Übung aus dem Trainingstag entfernt.");
+  }
+});
+
+document.addEventListener("submit", (event) => {
+  const form = event.target.closest(".inline-set-form");
+  if (!form) return;
+  event.preventDefault();
+  const weight = Number(form.elements.weight.value);
+  const repetitions = Number(form.elements.repetitions.value);
+  const setCount = Number(form.elements.setCount.value);
+  if (!Number.isFinite(weight) || weight < 0 || weight > 1000 || !Number.isInteger(repetitions) || repetitions < 1 || repetitions > 1000 || !Number.isInteger(setCount) || setCount < 1 || setCount > 30) {
+    showMessage("Bitte Gewicht, Wiederholungen und Satzanzahl gültig ausfüllen.");
+    return;
+  }
+  for (let index = 0; index < setCount; index += 1) {
+    state.sets.push({ id: createId(), exercise: form.dataset.exerciseId, exerciseId: form.dataset.exerciseId, weight, repetitions, date: today(), createdAt: Date.now() + index });
+  }
+  saveState();
+  render();
+  expandedExercises.add(form.dataset.exerciseId);
+  showMessage(`${setCount} Sätze gespeichert – stark gemacht!`);
 });
 
 document.querySelector("#clear-history-button").addEventListener("click", () => {

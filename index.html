@@ -47,69 +47,33 @@
           </div>
           <button class="button button-small" id="add-plan-button" type="button">+ Neuer Plan</button>
         </div>
-        <div class="plan-layout">
-          <div class="plan-sidebar">
-            <label for="plan-select">Aktiver Trainingsplan</label>
-            <select id="plan-select"></select>
-            <div id="plan-list" class="plan-list"></div>
-          </div>
-          <div class="plan-detail">
-            <div class="plan-detail-heading">
-              <div>
-                <p class="section-label">Wochenstruktur</p>
-                <h3 id="active-plan-name">Kein Plan ausgewählt</h3>
-              </div>
-              <button class="button button-quiet button-small" id="add-day-button" type="button">+ Trainingstag</button>
-            </div>
-            <div id="training-days" class="training-days"></div>
-            <p id="empty-plan" class="empty-state">Lege einen Plan und anschließend deine Trainingstage an.</p>
+        <div class="plan-toolbar">
+          <label for="plan-select">Aktiver Trainingsplan</label>
+          <select id="plan-select"></select>
+          <button class="button button-quiet button-small" id="add-day-button" type="button">+ Trainingstag</button>
+        </div>
+        <div id="training-day-tabs" class="training-day-tabs" role="tablist" aria-label="Trainingstage"></div>
+        <div id="training-days" class="training-days"></div>
+        <p id="empty-plan" class="empty-state">Lege einen Plan und anschließend deine Trainingstage an.</p>
+        <div class="day-exercise-adder">
+          <label for="day-exercise-select">Übung zum aktuellen Trainingstag hinzufügen</label>
+          <div class="add-exercise-row">
+            <select id="day-exercise-select"></select>
+            <button class="button button-primary button-small" id="add-day-exercise-button" type="button">+ Übung hinzufügen</button>
           </div>
         </div>
       </section>
 
-      <section class="dashboard-grid" id="log-section" aria-label="Training erfassen und Übungen verwalten">
-        <article class="card form-card">
-          <div class="card-heading">
-            <div>
-              <p class="section-label">Neuer Eintrag</p>
-              <h2>Training erfassen</h2>
-            </div>
-            <span class="card-icon" aria-hidden="true">↗</span>
+      <section class="card exercise-library-card" id="log-section" aria-label="Übungsbibliothek">
+        <div class="card-heading">
+          <div>
+            <p class="section-label">Bibliothek</p>
+            <h2>Übungen verwalten</h2>
           </div>
-          <form id="set-form" novalidate>
-            <div class="field">
-              <label for="exercise-select">Übung</label>
-              <select id="exercise-select" required></select>
-              <p class="field-error" data-error-for="exercise"></p>
-            </div>
-            <div class="field-row">
-              <div class="field">
-                <label for="weight">Gewicht <span class="unit">(kg)</span></label>
-                <input id="weight" name="weight" type="number" min="0" max="1000" step="0.5" inputmode="decimal" placeholder="z. B. 60" required />
-                <p class="field-error" data-error-for="weight"></p>
-              </div>
-              <div class="field">
-                <label for="repetitions">Wiederholungen</label>
-                <input id="repetitions" name="repetitions" type="number" min="1" max="1000" step="1" inputmode="numeric" placeholder="z. B. 10" required />
-                <p class="field-error" data-error-for="repetitions"></p>
-              </div>
-            </div>
-            <p class="today-note">Der Satz wird automatisch mit dem heutigen Datum gespeichert.</p>
-            <button class="button button-primary button-full" type="submit">Satz speichern <span aria-hidden="true">→</span></button>
-          </form>
-        </article>
-
-        <article class="card exercise-card">
-          <div class="card-heading">
-            <div>
-              <p class="section-label">Bibliothek</p>
-              <h2>Übungen</h2>
-            </div>
-            <button class="button button-small" id="add-exercise-button" type="button">+ Hinzufügen</button>
-          </div>
-          <div id="exercise-list" class="exercise-list"></div>
-          <p id="empty-exercises" class="empty-state">Noch keine Übungen angelegt.</p>
-        </article>
+          <button class="button button-small" id="add-exercise-button" type="button">+ Neue Übung</button>
+        </div>
+        <div id="exercise-list" class="exercise-list"></div>
+        <p id="empty-exercises" class="empty-state">Noch keine Übungen angelegt.</p>
       </section>
 
       <section class="card history-card" aria-labelledby="history-title">
